@@ -1,0 +1,11 @@
+T=atpy.Table().read('../rv_variability/rvtabs_iron/rvpix_exp-main-backup.fits')
+TG=atpy.Table().read('../rv_variability/rvtabs_iron/rvpix_exp-main-backup.fits','GAIA')
+TF=atpy.Table().read('../rv_variability/rvtabs_iron/rvpix_exp-main-backup.fits','FIBERMAP')
+tvhist2d(TF['MJD'],T['VRAD']-TG['RADIAL_VELOCITY'])
+tvhist2d(TF['MJD'],T['VRAD']-TG['RADIAL_VELOCITY'],'p0','p100','p1','p99')
+tvhist2d(TF['MJD'],T['VRAD']-TG['RADIAL_VELOCITY'],'p0','p100','p1','p99',normx='sum')
+tvhist2d(TF['MJD'],T['VRAD']-TG['RADIAL_VELOCITY'],'p0','p100','p1','p99',normx='sum',bins=[1000,100])
+tvhist2d(TF['MJD'],T['VRAD']-TG['RADIAL_VELOCITY'],'p0','p100','p1','p99',normx='sum',bins=[300,100])
+tvhist2d(TF['MJD'],T['VRAD']-TG['RADIAL_VELOCITY'],'p0','p100','p1','p99',normx='sum',bins=[300,100],vmax=.1)
+plt.tight_layout()
+%hist -f backup_systematics.py

@@ -36,10 +36,12 @@ fig = plt.figure(figsize=(3.37 * 1, 3.37 * .75))
 cur_sel = cur_sel0 & betw(RV_T['TEFF'], 4500, 7000) & (RV_T['VSINI'] < 30)
 opt = dict(alpha=.5, bins=100, range=[-5, .5], histtype='step')
 plt.hist(RV_T['FEH'][cur_sel], label='RVS', **opt)
+print('RV', (cur_sel & (SP_T['FEH'] < -3)).sum())
 
 cur_sel = cur_sel0 & (SP_T['BESTGRID'] != 's_rdesi1') & betw(
     SP_T['TEFF'], 4500, 7000)
 plt.hist(SP_T['FEH'][cur_sel], label='SP', **opt)
+print('SP', (cur_sel & (SP_T['FEH'] < -3)).sum())
 
 plt.gca().set_yscale('log')
 plt.xlabel('[Fe/H]')

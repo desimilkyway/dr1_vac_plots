@@ -8,6 +8,21 @@ from idlplotInd import plot, oplot
 import numpy as np
 import plot_preamb as pp
 
+
+def func(p, args):
+    xerr, yerr = args
+    err_calib = np.sqrt(p[0]**2 * xerr**2 + p[1]**2)
+    ret = np.sum(np.abs(np.log10(yerr) - np.log10(err_calib)))
+    print(ret, p)
+    return ret
+
+
+def fitter(xerr, yerr):
+    args = ((xerr, yerr), )
+    R = scipy.optimize.minimize(func, [1, 1], args=args, method='Nelder-Mead')
+    return R.x
+
+
 pp.run()
 fs = glob.glob('../../rv_variability/rvtabs_iron/*exp*fits')
 tabs = []
@@ -107,25 +122,24 @@ def funcer(x):
 plt.clf()
 survey = 'main'
 bins = 20
-floor_dict = {'dark': 1.2, 'bright': .7, 'backup': 2}
 fig = plt.figure(figsize=(3.37 * 1, 3.37 * .9))
-
+xres = {}
+floor_dict = {}
 for i, prog in enumerate(['dark', 'bright', 'backup']):
     sel1 = (PAIRS['program'] == prog) & (PAIRS['survey'] == survey) & (
         PAIRS['rvs_warn1'] == 0) & (PAIRS['rvs_warn2'] == 0)
-    floor = floor_dict[prog]
     erange = [-1, 1.5]
     sel2 = sel1 & (np.abs(PAIRS['mjd1'] - PAIRS['mjd2']) > 1)
-    SS = scipy.stats.binned_statistic(np.log10(comb_err[sel1]),
-                                      delt[sel1],
-                                      funcer,
-                                      range=erange,
-                                      bins=bins)
-    SC = scipy.stats.binned_statistic(np.log10(comb_err[sel1]),
-                                      delt[sel1],
-                                      'count',
-                                      range=erange,
-                                      bins=bins)
+    SS1 = scipy.stats.binned_statistic(np.log10(comb_err[sel1]),
+                                       delt[sel1],
+                                       funcer,
+                                       range=erange,
+                                       bins=bins)
+    SC1 = scipy.stats.binned_statistic(np.log10(comb_err[sel1]),
+                                       delt[sel1],
+                                       'count',
+                                       range=erange,
+                                       bins=bins)
     SS2 = scipy.stats.binned_statistic(np.log10(comb_err[sel2]),
                                        delt[sel2],
                                        funcer,
@@ -138,14 +152,19 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
                                        bins=bins)
 
     plt.subplot(3, 1, i + 1)
-    plot(10**(SS.bin_edges[:-1] + .5 * np.diff(SS.bin_edges)), (SS.statistic),
+    xsub = SC1.statistic > 100
+    A, B = (10**(SS1.bin_edges[:-1] + .5 * np.diff(SS1.bin_edges)),
+            SS1.statistic)
+    xres[prog] = A[xsub], B[xsub]
+    plot(A,
+         B,
          ps=3,
          ylog=True,
          xlog=True,
          yr=[.5, 30],
          xr=[.11, 30],
          noerase=True,
-         ind=SC.statistic > 100)
+         ind=xsub)
     oplot(10**(SS2.bin_edges[:-1] + .5 * np.diff(SS2.bin_edges)),
           (SS2.statistic),
           ps=3,
@@ -158,10 +177,17 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
     if i == 2:
         plt.xlabel(r'$\sqrt{\frac{\sigma_1^2+\sigma_2^2}{2}}$ [km/s]')
     plt.text(.2, 10, f'Survey, program: {survey},{prog}')
+    coeffs = fitter(*xres[prog])
+    floor_dict[prog] = np.round(coeffs[-1], 2)
+    floor = floor_dict[prog]
+    #floor_dict = {'dark': 1.2, 'bright': .7, 'backup': 2}
     oplot(10**xgrid,
           np.sqrt(10**(2 * xgrid) + floor**2),
-          label='floor %s km/s' % floor)
+          label='floor %g km/s' % floor)
     plt.legend()
+with open('repeat.pkl', 'wb') as fp:
+    import pickle
+    pickle.dump(xres, fp)
 plt.tight_layout()
 plt.subplots_adjust(wspace=0, hspace=0)
 plt.savefig('plots/repeats_accuracy.pdf')

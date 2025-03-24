@@ -33,7 +33,7 @@ ra, dec = RV_T['TARGET_RA'], RV_T['TARGET_DEC']
 HOST = open('WSDB', 'r').read()
 
 plt.clf()
-fig = plt.figure(figsize=(3.37 * 1., 3.37 * .7))
+fig = plt.figure(figsize=(3.37 * 2., 3.37 * 1))
 delt = RV_T['VRAD'] - G_T['RADIAL_VELOCITY']
 cur_sel = np.isfinite(delt) & cur_sel0
 
@@ -55,17 +55,57 @@ SC = scipy.stats.binned_statistic_2d(RV_T['TARGET_RA'][cur_sel],
 minval = 5
 stat = S.statistic
 stat[SC.statistic < minval] = np.nan
-plt.imshow(stat.T,
-           extent=list(xr) + list(yr),
-           origin='lower',
-           cmap='turbo',
-           aspect='auto',
-           vmax=25,
-           vmin=-25)
-plt.gci().set_rasterized(True)
-plt.colorbar(label=r'$\delta V_{rad}$ [km/s]')
-plt.xlim(360, 0)
-plt.xlabel(r'$\alpha$ [deg]')
-plt.ylabel(r'$\delta$ [deg]')
-plt.tight_layout()
+
+nside = 32
+import healpy
+
+hpx = healpy.ang2pix(nside,
+                     RV_T['TARGET_RA'],
+                     RV_T['TARGET_DEC'],
+                     lonlat=True,
+                     nest=True)
+
+S = scipy.stats.binned_statistic(hpx[cur_sel],
+                                 delt[cur_sel],
+                                 'median',
+                                 range=[-.5, 12 * nside**2 - .5],
+                                 bins=12 * nside**2)
+SC = scipy.stats.binned_statistic(hpx[cur_sel],
+                                  delt[cur_sel],
+                                  'count',
+                                  range=[-.5, 12 * nside**2 - 0.5],
+                                  bins=12 * nside**2)
+minval = 5
+stat = S.statistic
+stat[SC.statistic < minval] = np.nan
+
+import sky_plotter
+
+R = sky_plotter.hpx_show(
+    stat,
+    ra_shift=180,
+    vmin=-20,
+    vmax=20,
+    cmap='turbo',
+    dra_label=60,
+)
+R.set_rasterized(True)
+plt.colorbar(R, label=r'$\delta V_{rad}$ [km/s]', shrink=.8)
+
+#healpy.graticule()
+#plt.imshow(reproj_im, origin='lower', aspect='auto')
+if False:
+    plt.imshow(stat.T,
+               extent=list(xr) + list(yr),
+               origin='lower',
+               cmap='turbo',
+               aspect='auto',
+               vmax=25,
+               vmin=-25)
+# plt.colorbar(label=r'$\delta V_{rad}$ [km/s]')
+# plt.xlim(360, 0)
+#plt.xlabel(r'$\alpha$ [deg]')
+#plt.ylabel(r'$\delta$ [deg]')
+#plt.tight_layout()
+plt.subplots_adjust(right=.999, left=0.04, top=.98)
 plt.savefig('plots/backup_delt.pdf')

@@ -8,6 +8,8 @@ import match_lists
 from matplotlib.colors import TABLEAU_COLORS
 import scipy.optimize
 
+import sqlutilpy as sqlutil
+
 
 def betw(x, x1, x2):
     return (x >= x1) & (x < x2)
@@ -122,14 +124,6 @@ SAGA_R = get_saga(ra, dec)
 HOST = open('WSDB', 'r').read()
 conn = sqlutil.getConnection(host=HOST, db='wsdb', driver='psycopg')
 
-import signal
-
-
-def timeout_handler(signum, frame):
-    """Called by signal.alarm when time is up."""
-    raise TimeoutError("Function took too long and was interrupted.")
-
-
 if False:
     D_GA = crossmatcher.doit(
         'galah_dr4.allstar',
@@ -139,22 +133,13 @@ if False:
         conn=conn,
         asDict=True)
 else:
-    while True:
-        try:
-            signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(180)
-            D_GA = crossmatcher.doit_by_key(
-                'galah_dr4.allstar',
-                G_T['SOURCE_ID'],
-                'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
-                conn=conn,
-                asDict=True,
-                key_col='gaiadr3_source_id')
-            signal.alarm(0)
-            break
-        except TimeoutError:
-            print('interrupted1')
-            continue
+    D_GA = crossmatcher.doit_by_key(
+        'galah_dr4.allstar',
+        G_T['SOURCE_ID'],
+        'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
+        conn=conn,
+        asDict=True,
+        key_col='gaiadr3_source_id')
 
 if False:
 
@@ -168,41 +153,24 @@ if False:
         db='wsdb',
         asDict=True)
 else:
-    while True:
-        try:
-            signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(180)
-            D_AP = crossmatcher.doit_by_key(
-                'apogee_dr17.allstar',
-                G_T['SOURCE_ID'],
-                '''alpha_m,fe_h,c_fe,n_fe,o_fe,na_fe,mg_fe,si_fe,ca_fe,ti_fe,mn_fe,ni_fe,ce_fe,vhelio_avg,logg,teff,teff_spec,logg_spec,
+    D_AP = crossmatcher.doit_by_key(
+        'apogee_dr17.allstar',
+        G_T['SOURCE_ID'],
+        '''alpha_m,fe_h,c_fe,n_fe,o_fe,na_fe,mg_fe,si_fe,ca_fe,ti_fe,mn_fe,ni_fe,ce_fe,vhelio_avg,logg,teff,teff_spec,logg_spec,
             aspcapflag,starflag, fe_h_flag''',
-                key_col='gaiaedr3_source_id',
-                conn=conn,
-                asDict=True)
-            signal.alarm(0)
-            break
-        except TimeoutError:
-            print('interrupted2')
-            continue
+        key_col='gaiaedr3_source_id',
+        conn=conn,
+        asDict=True)
 
-while True:
-    try:
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(180)
-        D_GAIA = crossmatcher.doit_by_key(
-            'gaia_dr3.astrophysical_parameters',
-            G_T['SOURCE_ID'],
-            '''mh_gspspec,teff_gspspec,fem_gspspec,logg_gspspec,
+D_GAIA = crossmatcher.doit_by_key(
+    'gaia_dr3.astrophysical_parameters',
+    G_T['SOURCE_ID'],
+    '''mh_gspspec,teff_gspspec,fem_gspspec,logg_gspspec,
         coalesce(flags_gspspec like '0000000000000%', false) as good_flag ''',
-            key_col='source_id',
-            conn=conn,
-            asDict=True)
-        signal.alarm(0)
-        break
-    except TimeoutError:
-        print('interrupted3')
-        continue
+    key_col='source_id',
+    conn=conn,
+    asDict=True)
+
 D_GAIA['fe_h'] = D_GAIA['mh_gspspec']
 D_GAIA['fe_h'][~D_GAIA['good_flag']] = np.nan
 D_AP['fe_h'][(D_AP['fe_h_flag'] != 0) | (D_AP['starflag'] != 0) |

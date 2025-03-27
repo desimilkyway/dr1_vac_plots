@@ -5,7 +5,13 @@ def betw(x, x1, x2):
     return (x >= x1) & (x < x2)
 
 
-def calibrate(feh_orig, teff, logg, pipeline='RV', release='DR1'):
+def calibrate(feh_orig, teff, logg, pipeline='RVS', release='DR1'):
+    """
+    Take the input feh, teff and logg 
+    and return the calibrated feh
+    
+    Make sure to provide which pipeline it is RVS or SP
+    """
     assert release == 'DR1'
     logteff_scale = 0.1
     teff_ref = 5000

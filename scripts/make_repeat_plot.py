@@ -185,9 +185,10 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
           np.sqrt(10**(2 * xgrid) + floor**2),
           label='floor %g km/s' % floor)
     plt.legend()
-with open('repeat.pkl', 'wb') as fp:
-    import pickle
-    pickle.dump(xres, fp)
+if False:
+    with open('repeat.pkl', 'wb') as fp:
+        import pickle
+        pickle.dump(xres, fp)
 plt.tight_layout()
 plt.subplots_adjust(wspace=0, hspace=0)
 plt.savefig('plots/repeats_accuracy.pdf')

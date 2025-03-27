@@ -19,3 +19,5 @@ for s in mysurveys:
         print('%s & %s &  %s & %s & %s \\\\' %
               (s, p, format(xind1.sum(), ','), format(
                   xind2.sum(), ','), format(xind3.sum(), ',')))
+
+print(np.median(RV_T['VRAD_ERR']))

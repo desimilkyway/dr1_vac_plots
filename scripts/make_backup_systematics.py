@@ -79,6 +79,8 @@ minval = 5
 stat = S.statistic
 stat[SC.statistic < minval] = np.nan
 
+print('Total', np.isfinite(stat).sum())
+print('<20', (np.abs(stat) < 20).sum())
 import sky_plotter
 
 R = sky_plotter.hpx_show(

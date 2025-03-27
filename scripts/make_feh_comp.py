@@ -78,6 +78,10 @@ def fitter_cut(teff, logg, feh_ref, feh_obs):
     X, Y, Z = np.log10(teff), logg, feh_obs - feh_ref
     aind = main_sel & np.isfinite(X + Y + Z) & betw(teff, minteff, maxteff)
     X, Y, Z = np.array(X[aind]), np.array(Y[aind]), np.array(Z[aind])
+    print('Number of stars', aind.sum())
+    print('Percentiles', np.percentile(teff[aind], 0.5),
+          np.percentile(teff[aind], 99.5), np.percentile(logg, .5),
+          np.percentile(logg[aind], 99.5))
     funcs = []
     cuts = np.arange(0, 6, 0.1)
     for cut in cuts:
@@ -116,6 +120,15 @@ ra, dec = RV_T['TARGET_RA'], RV_T['TARGET_DEC']
 SAGA_R = get_saga(ra, dec)
 
 HOST = open('WSDB', 'r').read()
+conn = sqlutil.getConnection(host=HOST, db='wsdb', driver='psycopg')
+
+import signal
+
+
+def timeout_handler(signum, frame):
+    """Called by signal.alarm when time is up."""
+    raise TimeoutError("Function took too long and was interrupted.")
+
 
 if False:
     D_GA = crossmatcher.doit(
@@ -123,18 +136,25 @@ if False:
         ra,
         dec,
         'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
-        host=HOST,
-        db='wsdb',
+        conn=conn,
         asDict=True)
 else:
-    D_GA = crossmatcher.doit_by_key(
-        'galah_dr4.allstar',
-        G_T['SOURCE_ID'],
-        'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
-        host=HOST,
-        db='wsdb',
-        asDict=True,
-        key_col='gaiadr3_source_id')
+    while True:
+        try:
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(180)
+            D_GA = crossmatcher.doit_by_key(
+                'galah_dr4.allstar',
+                G_T['SOURCE_ID'],
+                'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
+                conn=conn,
+                asDict=True,
+                key_col='gaiadr3_source_id')
+            signal.alarm(0)
+            break
+        except TimeoutError:
+            print('interrupted1')
+            continue
 
 if False:
 
@@ -148,23 +168,41 @@ if False:
         db='wsdb',
         asDict=True)
 else:
-    D_AP = crossmatcher.doit_by_key(
-        'apogee_dr17.allstar',
-        G_T['SOURCE_ID'],
-        '''alpha_m,fe_h,c_fe,n_fe,o_fe,na_fe,mg_fe,si_fe,ca_fe,ti_fe,mn_fe,ni_fe,ce_fe,vhelio_avg,logg,teff,teff_spec,logg_spec,
-    aspcapflag,starflag, fe_h_flag''',
-        key_col='gaiaedr3_source_id',
-        host=HOST,
-        db='wsdb',
-        asDict=True)
+    while True:
+        try:
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(180)
+            D_AP = crossmatcher.doit_by_key(
+                'apogee_dr17.allstar',
+                G_T['SOURCE_ID'],
+                '''alpha_m,fe_h,c_fe,n_fe,o_fe,na_fe,mg_fe,si_fe,ca_fe,ti_fe,mn_fe,ni_fe,ce_fe,vhelio_avg,logg,teff,teff_spec,logg_spec,
+            aspcapflag,starflag, fe_h_flag''',
+                key_col='gaiaedr3_source_id',
+                conn=conn,
+                asDict=True)
+            signal.alarm(0)
+            break
+        except TimeoutError:
+            print('interrupted2')
+            continue
 
-D_GAIA = crossmatcher.doit_by_key(
-    'gaia_dr3.astrophysical_parameters',
-    G_T['SOURCE_ID'],
-    '''mh_gspspec,teff_gspspec,fem_gspspec,logg_gspspec,
-    coalesce(flags_gspspec like '0000000000000%', false) as good_flag ''',
-    key_col='source_id',
-    asDict=True)
+while True:
+    try:
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(180)
+        D_GAIA = crossmatcher.doit_by_key(
+            'gaia_dr3.astrophysical_parameters',
+            G_T['SOURCE_ID'],
+            '''mh_gspspec,teff_gspspec,fem_gspspec,logg_gspspec,
+        coalesce(flags_gspspec like '0000000000000%', false) as good_flag ''',
+            key_col='source_id',
+            conn=conn,
+            asDict=True)
+        signal.alarm(0)
+        break
+    except TimeoutError:
+        print('interrupted3')
+        continue
 D_GAIA['fe_h'] = D_GAIA['mh_gspspec']
 D_GAIA['fe_h'][~D_GAIA['good_flag']] = np.nan
 D_AP['fe_h'][(D_AP['fe_h_flag'] != 0) | (D_AP['starflag'] != 0) |
@@ -184,9 +222,11 @@ RV_T['FEH_CALIB'] = RV_T['FEH'] - np.poly1d(coeff_rv)(
     np.log10(RV_T['TEFF'] / teff_ref) / logteff_scale)
 print('RV', coeff_rv[::-1], 'SP', coeff_sp[::-1])
 
+print('SP')
 cut_sp, coeff_sp2 = fitter_cut(SP_T['TEFF'], SP_T['LOGG'],
                                combiner(D_GA["fe_h"], D_AP['fe_h']),
                                SP_T['FEH'])
+print('RV')
 cut_rv, coeff_rv2 = fitter_cut(RV_T['TEFF'], RV_T['LOGG'],
                                combiner(D_GA["fe_h"], D_AP['fe_h']),
                                RV_T['FEH'])

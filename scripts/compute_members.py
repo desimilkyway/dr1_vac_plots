@@ -9,14 +9,14 @@ import multiprocessing as mp
 
 def get_lists():
     PL = atpy.Table().read(
-        '/home/skoposov/science/desi/spphot_fit/validation/paceli/allmembs.fits'
-    )
+        '/home/skoposov/science/desi/spphot_fit/validation/paceli/'
+        'allmembs.fits')
     PL = PL[PL['mem_fixed'] > .9]
     PL['name'] = PL['key']
     # PL['source_id'] is already there
     BAU = atpy.Table().read(
-        '/home/skoposov/science/datasets/vasiliev_baumgardt2021/cluster_members.fits'
-    )
+        '/home/skoposov/science/datasets/vasiliev_baumgardt2021/'
+        'cluster_members.fits')
     BAU = BAU[BAU['memberprob'] > .9]
     # name and source_id are already there
 
@@ -28,7 +28,8 @@ def get_lists():
     CA_dr3_id, = sqlutil.local_join(
         '''
     with x as (select rid, dr3_source_id, row_number() over (
-        partition by rid order by angular_distance asc ) from gaia_edr3.dr2_neighbourhood as g, m
+        partition by rid order by angular_distance asc )
+        from gaia_edr3.dr2_neighbourhood as g, m
     where m.source_id = g.dr2_source_id )
     select dr3_source_id from x where row_number =1 order by rid
     ''', 'm', (
@@ -58,16 +59,31 @@ if __name__ == '__main__':
     RV_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
                              'RVTAB',
                              mask_invalid=False)
+    SP_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
+                             'SPTAB',
+                             mask_invalid=False)
     G_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
                             'GAIA',
                             mask_invalid=False)
-    feh_calib = feh_correct.calibrate(np.asarray(RV_T["FEH"]),
-                                      np.asarray(RV_T["TEFF"]),
-                                      np.asarray(RV_T['LOGG']),
-                                      pipeline='RVS',
-                                      release='DR1')
-    feh_calib = np.asarray(feh_calib)
-    feh_err = np.asarray(RV_T['FEH_ERR'])
+    pipeline = 'SP'
+    calibrated = False
+    if pipeline == 'SP':
+        XTAB = SP_T
+        feh_err = np.asarray(SP_T['COVAR'][:, 0, 0]**.5)
+    elif pipeline == 'RVS':
+        XTAB = RV_T
+        feh_err = np.asarray(RV_T['FEH_ERR'])
+    else:
+        raise Exception('oops')
+    if calibrated:
+        feh = feh_correct.calibrate(np.asarray(XTAB["FEH"]),
+                                    np.asarray(XTAB["TEFF"]),
+                                    np.asarray(XTAB['LOGG']),
+                                    pipeline=pipeline,
+                                    release='DR1')
+    else:
+        feh = np.asarray(XTAB['FEH'])
+    feh = np.asarray(feh)
     lists = get_lists()
     to_print = []
     queue = []
@@ -81,18 +97,18 @@ if __name__ == '__main__':
                     # print(typ, k, v)
                     to_print.append((typ, k, v))
                     sub2 = (np.isin(G_T['SOURCE_ID'], cursid)
-                            & np.isfinite(feh_calib + feh_err) &
+                            & np.isfinite(feh + feh_err) &
                             (RV_T['RVS_WARN'] == 0)
                             & (RV_T['PRIMARY']) &
                             (RV_T['RR_SPECTYPE'] == 'STAR'))
                     queue.append(
                         poo.apply_async(fit_scatter.get_scatter,
-                                        (feh_calib[sub2], feh_err[sub2])))
-                    #ret_mean, ret, warn, _ = fit_scatter.get_scatter(
+                                        (feh[sub2], feh_err[sub2])))
+                    # ret_mean, ret, warn, _ = fit_scatter.get_scatter(
                     #    feh_calib[sub2], np.asarray(RV_T['FEH_ERR'][sub2]))
         for tp, it in zip(to_print, queue):
             ret_mean, ret, warn, _ = it.get()
             typ, k, v = tp
-            print(typ, k, v)
+            print(typ, k, v, end=" ")
             print('%.2f %.2f %.2f' % tuple(ret_mean),
                   '%.2f %.2f %.2f' % tuple(ret))

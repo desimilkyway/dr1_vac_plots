@@ -20,11 +20,14 @@ def calibrate(feh_orig, teff, logg, pipeline='RVS', release='DR1'):
         'SP': [[0, 5.4], [4000, 6700]]
     }
     cuts = {'RVS': 4.4, 'SP': 3.6}
-    coeffs_low = {'RVS': [0.197, -0.785, .417], 'SP': [0.112, 0.195, -.165]}
-    coeffs_high = {'RVS': [0.038, -0.281, .084], 'SP': [0.041, -0.095, -.117]}
+    coeffs_low = {'RVS': [0.197, -0.785, 0.417], 'SP': [0.112, 0.195, -0.162]}
+    coeffs_high = {
+        'RVS': [0.038, -0.281, 0.084],
+        'SP': [0.041, -0.095, -0.117]
+    }
 
-    coeff_l = coeffs_low[pipeline]
-    coeff_h = coeffs_high[pipeline]
+    coeff_low = coeffs_low[pipeline]
+    coeff_high = coeffs_high[pipeline]
     cut = cuts[pipeline]
     bound = bounds[pipeline]
     if pipeline not in ["RVS", "SP"]:
@@ -33,9 +36,10 @@ def calibrate(feh_orig, teff, logg, pipeline='RVS', release='DR1'):
     subset = betw(logg, bound[0][0], bound[0][1]) & betw(
         teff, bound[1][0], bound[1][1])
     ret = feh_orig * 0 + np.nan
-    subset_l = subset & (logg < cut)
-    subset_h = subset & (logg >= cut)
-    for cur_sub, cur_coeff in zip([subset_l, coeff_l], [subset_h, coeff_h]):
-        ret[cur_sub] = (feh_orig[cur_sub] - np.poly1d(cur_coeff)(
+    subset_low = subset & (logg < cut)
+    subset_high = subset & (logg >= cut)
+    for cur_sub, cur_coeff in ([subset_low,
+                                coeff_low], [subset_high, coeff_high]):
+        ret[cur_sub] = (feh_orig[cur_sub] - np.poly1d(cur_coeff[::-1])(
             np.log10(teff[cur_sub] / teff_ref) / logteff_scale))
     return ret

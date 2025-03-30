@@ -26,7 +26,7 @@ def combiner(*args):
 
 def get_saga(ra, dec):
     SAGAT = atpy.Table().read(
-        'saga_cleaned_catalog.tsv',
+        'external/saga_cleaned_catalog.tsv',
         format='ascii',
     )
     DD, xind = match_lists.match_lists(ra, dec, SAGAT['RAdeg'],
@@ -38,12 +38,19 @@ def get_saga(ra, dec):
 
 
 def get_ges(ra, dec):
-    GEST = atpy.Table().read('gaia_eso_cat_dr4_esoarch.fits',
+    GEST = atpy.Table().read('external/gaia_eso_cat_dr4_esoarch.fits',
                              mask_invalid=False)
+    sub = (((GEST['SFLAGS'] == '                                       ') |
+            (GEST['SFLAGS'] == 'NIA                                    ')) &
+           (GEST['E_FEH'] < .1))
+    GEST = GEST[sub]
+
     DD, xind = match_lists.match_lists(ra, dec, GEST['RA'],
                                        GEST['DECLINATION'], 1. / 3600)
-    GES = {'feh': np.zeros(len(ra)) + np.nan}
+    GES = {'fe_h': np.zeros(len(ra)) + np.nan}
+
     GES['fe_h'][np.isfinite(DD)] = GEST['FEH'][xind[np.isfinite(DD)]]
+    return GES
 
 
 teff_ref = 5000
@@ -119,48 +126,28 @@ cur_sel0 = main_sel & (RV_T['SURVEY'] == 'main') & (RV_T['SN_R'] > 10)
 
 ra, dec = RV_T['TARGET_RA'], RV_T['TARGET_DEC']
 
-SAGA_R = get_saga(ra, dec)
+D_SAGA = get_saga(ra, dec)
 
 HOST = open('WSDB', 'r').read()
 conn = sqlutil.getConnection(host=HOST, db='wsdb', driver='psycopg')
 
-if False:
-    D_GA = crossmatcher.doit(
-        'galah_dr4.allstar',
-        ra,
-        dec,
-        'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
-        conn=conn,
-        asDict=True)
-else:
-    D_GA = crossmatcher.doit_by_key(
-        'galah_dr4.allstar',
-        G_T['SOURCE_ID'],
-        'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
-        conn=conn,
-        asDict=True,
-        key_col='gaiadr3_source_id')
+D_GES = get_ges(RV_T['TARGET_RA'], RV_T['TARGET_DEC'])
+D_GA = crossmatcher.doit_by_key(
+    'galah_dr4.allstar',
+    G_T['SOURCE_ID'],
+    'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
+    conn=conn,
+    asDict=True,
+    key_col='gaiadr3_source_id')
 
-if False:
-
-    D_AP = crossmatcher.doit(
-        'apogee_dr17.allstar',
-        ra,
-        dec,
-        '''alpha_m,fe_h,c_fe,n_fe,o_fe,na_fe,mg_fe,si_fe,ca_fe,ti_fe,mn_fe,ni_fe,ce_fe,vhelio_avg,logg,teff,teff_spec,logg_spec,
-    aspcapflag,starflag, fe_h_flag''',
-        host=HOST,
-        db='wsdb',
-        asDict=True)
-else:
-    D_AP = crossmatcher.doit_by_key(
-        'apogee_dr17.allstar',
-        G_T['SOURCE_ID'],
-        '''alpha_m,fe_h,c_fe,n_fe,o_fe,na_fe,mg_fe,si_fe,ca_fe,ti_fe,mn_fe,ni_fe,ce_fe,vhelio_avg,logg,teff,teff_spec,logg_spec,
+D_AP = crossmatcher.doit_by_key(
+    'apogee_dr17.allstar',
+    G_T['SOURCE_ID'],
+    '''alpha_m,fe_h,c_fe,n_fe,o_fe,na_fe,mg_fe,si_fe,ca_fe,ti_fe,mn_fe,ni_fe,ce_fe,vhelio_avg,logg,teff,teff_spec,logg_spec,
             aspcapflag,starflag, fe_h_flag''',
-        key_col='gaiaedr3_source_id',
-        conn=conn,
-        asDict=True)
+    key_col='gaiaedr3_source_id',
+    conn=conn,
+    asDict=True)
 
 D_GAIA = crossmatcher.doit_by_key(
     'gaia_dr3.astrophysical_parameters',
@@ -188,8 +175,7 @@ SP_T['FEH_CALIB'] = SP_T['FEH'] - np.poly1d(coeff_sp)(
     np.log10(SP_T['TEFF'] / teff_ref) / logteff_scale)
 RV_T['FEH_CALIB'] = RV_T['FEH'] - np.poly1d(coeff_rv)(
     np.log10(RV_T['TEFF'] / teff_ref) / logteff_scale)
-print('RV', coeff_rv[::-1], 'SP', coeff_sp[::-1])
-
+# print('RV', coeff_rv[::-1], 'SP', coeff_sp[::-1])
 print('SP')
 cut_sp, coeff_sp2 = fitter_cut(SP_T['TEFF'], SP_T['LOGG'],
                                combiner(D_GA["fe_h"], D_AP['fe_h']),
@@ -203,6 +189,13 @@ coeff_rv2 = np.round(coeff_rv2, 3)
 print('RV', coeff_rv2[:3][::-1], '\n', coeff_rv2[3:][::-1], '\n cut', cut_rv,
       '\n', 'SP', coeff_sp2[:3][::-1], '\n', coeff_sp2[3:][::-1], '\n cut',
       cut_sp)
+
+fp = open('feh_coeffs.txt', 'w')
+print('RV', 'low', ("%s %s %s") % tuple(coeff_rv2[:3][::-1]), file=fp)
+print('RV', 'high', ("%s %s %s") % tuple(coeff_rv2[3:][::-1]), file=fp)
+print('SP', 'low', ("%s %s %s") % tuple(coeff_sp2[:3][::-1]), file=fp)
+print('SP', 'high', ("%s %s %s") % tuple(coeff_sp2[3:][::-1]), file=fp)
+fp.close()
 
 SP_T['FEH_CALIB2'] = (SP_T['FEH'] - np.poly1d(coeff_sp2[:3])
                       (np.log10(SP_T['TEFF'] / teff_ref) / logteff_scale) *
@@ -233,7 +226,7 @@ for x1 in range(2):
         # plt.subplot(3, 2, 1 + 2 * x2 + x1)
         plt.subplot(gs[100 * x2 + pad * (x2 == 2):100 * x2 + 100 + pad *
                        (x2 == 2), 100 * x1:100 * x1 + 100])
-        COMP = [D_GA, D_AP, SAGA_R][x2]
+        COMP = [D_GA, D_AP, D_SAGA][x2]
         curfeh = T["FEH"]
         if x2 < 2:
             plt.hist2d(COMP['fe_h'][cur_sel],
@@ -271,7 +264,7 @@ for var_name in ['FEH', 'FEH_CALIB2']:
     ncnt = 4
     for cnt in range(ncnt):
         plt.subplot(ncnt, 1, cnt + 1)
-        COMP = [D_GA, D_AP, D_GAIA, SAGA_R][(cnt)]
+        COMP = [D_GA, D_AP, D_GAIA, D_SAGA][(cnt)]
         tit = ['GALAH', 'APOGEE', 'Gaia', 'SAGA'][cnt]
         bins = [100, 100, 100, 10][cnt]
         for i, (T, label) in enumerate(zip([RV_T, SP_T], ['RVS', 'SP'])):

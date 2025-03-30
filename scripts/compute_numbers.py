@@ -21,3 +21,22 @@ for s in mysurveys:
                   xind2.sum(), ','), format(xind3.sum(), ',')))
 
 print(np.median(RV_T['VRAD_ERR']))
+sub = (RV_T['SURVEY'] == 'main') & (RV_T['PROGRAM'] == 'bright')
+print(np.median(RV_T['VRAD_ERR'][sub]))
+sub = ((RV_T['SURVEY'] == 'main') & (RV_T['PROGRAM'] == 'bright') &
+       (RV_T['RR_SPECTYPE'] == 'STAR') & (RV_T['RVS_WARN'] == 0)
+       & RV_T['PRIMARY'])
+SP_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
+                         'SPTAB',
+                         mask_invalid=False)
+sub = ((RV_T['RR_SPECTYPE'] == 'STAR') & (RV_T['RVS_WARN'] == 0)
+       & RV_T['PRIMARY'])
+print('RV MP', (sub & (RV_T['FEH'] < -2)).sum())
+print('SP MP', (sub & (SP_T['FEH'] < -2)
+                & (SP_T['BESTGRID'] != 's_rdesi1')).sum())
+print('RV MP', (sub & (RV_T['FEH'] < -3)).sum())
+print('SP MP', (sub & (SP_T['FEH'] < -3)
+                & (SP_T['BESTGRID'] != 's_rdesi1')).sum())
+print('RV MP', (sub & (RV_T['FEH'] < -4)).sum())
+print('SP MP', (sub & (SP_T['FEH'] < -4)
+                & (SP_T['BESTGRID'] != 's_rdesi1')).sum())

@@ -138,7 +138,7 @@ if __name__ == '__main__':
         for pp in ['rvs', 'sp']:
             end = {'rvs': ' ', 'sp': None}[pp]
             print(
-                'feh_{pp1} feh_{pp}2 feh_{pp}3 sfeh_{pp}1 sfeh_{pp}2 sfeh_{pp}3',
+                f'feh_{pp}_1 feh_{pp}_2 feh_{pp}_3 sfeh_{pp}_1 sfeh_{pp}_2 sfeh_{pp}_3',
                 end=end)
         for k in out_tab.keys():
             typ, k, v, param = out_tab[k]

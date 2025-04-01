@@ -5,6 +5,8 @@ import collections
 import feh_correct
 import fit_scatter
 import multiprocessing as mp
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
 
 
 def get_lists():
@@ -65,50 +67,86 @@ if __name__ == '__main__':
     G_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
                             'GAIA',
                             mask_invalid=False)
-    pipeline = 'SP'
-    calibrated = False
-    if pipeline == 'SP':
-        XTAB = SP_T
-        feh_err = np.asarray(SP_T['COVAR'][:, 0, 0]**.5)
-    elif pipeline == 'RVS':
-        XTAB = RV_T
-        feh_err = np.asarray(RV_T['FEH_ERR'])
-    else:
-        raise Exception('oops')
-    if calibrated:
-        feh = feh_correct.calibrate(np.asarray(XTAB["FEH"]),
-                                    np.asarray(XTAB["TEFF"]),
-                                    np.asarray(XTAB['LOGG']),
-                                    pipeline=pipeline,
-                                    release='DR1')
-    else:
-        feh = np.asarray(XTAB['FEH'])
-    feh = np.asarray(feh)
+    calibrated = True
     lists = get_lists()
+
     to_print = []
     queue = []
+    out_tab = {}
     with mp.Pool(36) as poo:
-        for typ, tab in lists.items():
-            sub = np.isin(tab['source_id'], G_T['SOURCE_ID'])
-            curtab = tab[sub]
-            for k, v in collections.Counter(curtab['name']).items():
-                cursid = curtab['source_id'][curtab['name'] == k]
-                if v > 10:
-                    # print(typ, k, v)
-                    to_print.append((typ, k, v))
-                    sub2 = (np.isin(G_T['SOURCE_ID'], cursid)
-                            & np.isfinite(feh + feh_err) &
-                            (RV_T['RVS_WARN'] == 0)
-                            & (RV_T['PRIMARY']) &
-                            (RV_T['RR_SPECTYPE'] == 'STAR'))
-                    queue.append(
-                        poo.apply_async(fit_scatter.get_scatter,
-                                        (feh[sub2], feh_err[sub2])))
-                    # ret_mean, ret, warn, _ = fit_scatter.get_scatter(
-                    #    feh_calib[sub2], np.asarray(RV_T['FEH_ERR'][sub2]))
+        for pipeline in ['RVS', 'SP']:
+            if pipeline == 'SP':
+                XTAB = SP_T
+                bad = (SP_T['BESTGRID'] == 's_rdesi1')
+                SP_T['FEH'][bad] = np.nan
+                feh_err = np.asarray(SP_T['COVAR'][:, 0, 0]**.5)
+            elif pipeline == 'RVS':
+                XTAB = RV_T
+                feh_err = np.asarray(RV_T['FEH_ERR'])
+            else:
+                raise Exception('oops')
+            if calibrated:
+                feh = feh_correct.calibrate(np.asarray(XTAB["FEH"]),
+                                            np.asarray(XTAB["TEFF"]),
+                                            np.asarray(XTAB['LOGG']),
+                                            pipeline=pipeline,
+                                            release='DR1')
+            else:
+                feh = np.asarray(XTAB['FEH'])
+
+            feh = np.asarray(feh)
+
+            for typ, tab in lists.items():
+                sub = np.isin(tab['source_id'], G_T['SOURCE_ID'])
+                curtab = tab[sub]
+                for k, v in collections.Counter(curtab['name']).items():
+                    cursid = curtab['source_id'][curtab['name'] == k]
+                    if v > 10:
+                        # print(typ, k, v)
+                        to_print.append((typ, k, v, pipeline))
+                        sub2 = (np.isin(G_T['SOURCE_ID'], cursid)
+                                & np.isfinite(feh + feh_err) &
+                                (RV_T['RVS_WARN'] == 0)
+                                & (RV_T['PRIMARY']) &
+                                (RV_T['RR_SPECTYPE'] == 'STAR'))
+                        queue.append(
+                            (poo.apply_async(fit_scatter.get_scatter,
+                                             (feh[sub2], feh_err[sub2])),
+                             feh[sub2], feh_err[sub2]))
+        pdf_file = PdfPages('multipage_plots.pdf')
         for tp, it in zip(to_print, queue):
-            ret_mean, ret, warn, _ = it.get()
-            typ, k, v = tp
+            (ret_mean, ret_sig, warn,
+             _), cur_feh, cur_efeh = it[0].get(), it[1], it[2]
+            # manually kill LMS-1
+            if len(cur_feh) < 10 or k == 'LMS-1' or k == 'Leiptr':
+                ret_mean = [np.nan] * 3
+                ret_sig = [np.nan] * 3
+            typ, k, v, pipeline = tp
+            if k not in out_tab:
+                out_tab[k] = (typ, k, v, {'RVS': [ret_mean, ret_sig]})
+            else:
+                out_tab[k][3]['SP'] = [ret_mean, ret_sig]
+            fig = plt.figure()
+            plt.hist(cur_feh, range=[-4, .5], bins=45, histtype='step')
+            plt.axvline(ret_mean[1], color='red')
+            plt.title(k + ' ' + pipeline)
+            plt.xlabel('feh')
+            pdf_file.savefig()
+            plt.close()
+        pdf_file.close()
+        print('type name count', end=' ')
+        for pp in ['rvs', 'sp']:
+            end = {'rvs': ' ', 'sp': None}[pp]
+            print(
+                'feh_{pp1} feh_{pp}2 feh_{pp}3 sfeh_{pp}1 sfeh_{pp}2 sfeh_{pp}3',
+                end=end)
+        for k in out_tab.keys():
+            typ, k, v, param = out_tab[k]
             print(typ, k, v, end=" ")
+            ret_mean, ret_sig = param['RVS']
             print('%.2f %.2f %.2f' % tuple(ret_mean),
-                  '%.2f %.2f %.2f' % tuple(ret))
+                  '%.2f %.2f %.2f' % tuple(ret_sig),
+                  end=" ")
+            ret_mean, ret_sig = param['SP']
+            print('%.2f %.2f %.2f' % tuple(ret_mean),
+                  '%.2f %.2f %.2f' % tuple(ret_sig))

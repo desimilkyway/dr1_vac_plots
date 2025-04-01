@@ -14,14 +14,16 @@ def _trans_loguni(x, a, b):
 @dataclass
 class Prior:
     max_bg_frac: float = 0.3
-    min_obj_sig: float = 0.02
-    max_obj_sig: float = 0.7
-    min_bg_sig: float = 0.7
-    max_bg_sig: float = 1.
-    min_bg_cen: float = -2
-    max_bg_cen: float = 0
+
     min_obj_cen: float = -4
     max_obj_cen: float = 0.5
+    min_obj_sig: float = 0.02
+    max_obj_sig: float = 0.7
+
+    min_bg_cen: float = -2
+    max_bg_cen: float = 0
+    min_bg_sig: float = 0.7
+    max_bg_sig: float = 1.3
 
     def __call__(self, p):
         """

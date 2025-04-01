@@ -148,7 +148,7 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
          xlog=True,
          yr=[0.01, 1],
          xr=[0.01, 1],
-         xtitle=r'$\sqrt{\frac{\sigma_1^2+\sigma_2^2}{2}}$ [km/s]',
+         xtitle=r'$\sqrt{\frac{\sigma_1^2+\sigma_2^2}{2}}$ [dex]',
          noerase=True,
          title=f'Survey, program: {survey},{prog}',
          ind=SC.statistic > 100)
@@ -159,7 +159,7 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
           ind=SC2.statistic > 100)
     if i == 0:
         plt.ylabel(
-            r'$\frac{1}{\sqrt{2}}$ StdDev([Fe/H]$_1$-[Fe/H]$_2$) [km/s]')
+            r'$\frac{1}{\sqrt{2}}$ StdDev([Fe/H]$_1$-[Fe/H]$_2$) [dex]')
     else:
         plt.gca().yaxis.set_major_formatter(plt.NullFormatter())
     floor = {'dark': .03, 'bright': .03, 'backup': .03}[prog]

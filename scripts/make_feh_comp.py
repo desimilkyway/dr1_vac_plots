@@ -207,6 +207,25 @@ RV_T['FEH_CALIB2'] = (RV_T['FEH'] - np.poly1d(coeff_rv2[:3])
                       (RV_T['LOGG'] < cut_rv) - np.poly1d(coeff_rv2[3:])
                       (np.log10(RV_T['TEFF'] / teff_ref) / logteff_scale) *
                       (RV_T['LOGG'] >= cut_rv))
+import feh_correct
+
+xf1 = feh_correct.calibrate(RV_T['FEH'],
+                            RV_T['TEFF'],
+                            RV_T['LOGG'],
+                            pipeline='RVS')
+xf2 = feh_correct.calibrate(SP_T['FEH'],
+                            SP_T['TEFF'],
+                            SP_T['LOGG'],
+                            pipeline='SP')
+
+
+def checker(x1, x2):
+    xind = np.isfinite(x1 + x2)
+    assert (np.allclose(x1[xind], x2[xind]))
+
+
+checker(xf1, RV_T['FEH_CALIB2'])
+checker(xf2, SP_T['FEH_CALIB2'])
 
 plt.clf()
 fig = plt.figure(figsize=(3.37 * 1, 3.37 * 1.4))

@@ -58,15 +58,11 @@ def get_lists():
 
 
 if __name__ == '__main__':
-    RV_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                             'RVTAB',
-                             mask_invalid=False)
-    SP_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                             'SPTAB',
-                             mask_invalid=False)
-    G_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                            'GAIA',
-                            mask_invalid=False)
+    fname = '../data/mwsall-pix-iron.fits'
+    RV_T = atpy.Table().read(fname, 'RVTAB', mask_invalid=False)
+    SP_T = atpy.Table().read(fname, 'SPTAB', mask_invalid=False)
+    G_T = atpy.Table().read(fname, 'GAIA', mask_invalid=False)
+
     calibrated = True
     lists = get_lists()
 
@@ -113,15 +109,16 @@ if __name__ == '__main__':
                             (poo.apply_async(fit_scatter.get_scatter,
                                              (feh[sub2], feh_err[sub2])),
                              feh[sub2], feh_err[sub2]))
+
         pdf_file = PdfPages('multipage_plots.pdf')
         for tp, it in zip(to_print, queue):
             (ret_mean, ret_sig, warn,
              _), cur_feh, cur_efeh = it[0].get(), it[1], it[2]
             # manually kill LMS-1
+            typ, k, v, pipeline = tp
             if len(cur_feh) < 10 or k == 'LMS-1' or k == 'Leiptr':
                 ret_mean = [np.nan] * 3
                 ret_sig = [np.nan] * 3
-            typ, k, v, pipeline = tp
             if k not in out_tab:
                 out_tab[k] = (typ, k, v, {'RVS': [ret_mean, ret_sig]})
             else:
@@ -134,19 +131,24 @@ if __name__ == '__main__':
             pdf_file.savefig()
             plt.close()
         pdf_file.close()
-        print('type name count', end=' ')
-        for pp in ['rvs', 'sp']:
-            end = {'rvs': ' ', 'sp': None}[pp]
-            print(
-                f'feh_{pp}_1 feh_{pp}_2 feh_{pp}_3 sfeh_{pp}_1 sfeh_{pp}_2 sfeh_{pp}_3',
-                end=end)
-        for k in out_tab.keys():
-            typ, k, v, param = out_tab[k]
-            print(typ, k, v, end=" ")
-            ret_mean, ret_sig = param['RVS']
-            print('%.2f %.2f %.2f' % tuple(ret_mean),
-                  '%.2f %.2f %.2f' % tuple(ret_sig),
-                  end=" ")
-            ret_mean, ret_sig = param['SP']
-            print('%.2f %.2f %.2f' % tuple(ret_mean),
-                  '%.2f %.2f %.2f' % tuple(ret_sig))
+        with open('objs.txt', 'w') as fp:
+            print('type name count', end=' ', file=fp)
+            for pp in ['rvs', 'sp']:
+                end = {'rvs': ' ', 'sp': None}[pp]
+                print(
+                    f'feh_{pp}_1 feh_{pp}_2 feh_{pp}_3 '
+                    f'sfeh_{pp}_1 sfeh_{pp}_2 sfeh_{pp}_3',
+                    end=end,
+                    file=fp)
+            for k in out_tab.keys():
+                typ, k, v, param = out_tab[k]
+                print(typ, k, v, end=" ", file=fp)
+                ret_mean, ret_sig = param['RVS']
+                print('%.2f %.2f %.2f' % tuple(ret_mean),
+                      '%.2f %.2f %.2f' % tuple(ret_sig),
+                      end=" ",
+                      file=fp)
+                ret_mean, ret_sig = param['SP']
+                print('%.2f %.2f %.2f' % tuple(ret_mean),
+                      '%.2f %.2f %.2f' % tuple(ret_sig),
+                      file=fp)

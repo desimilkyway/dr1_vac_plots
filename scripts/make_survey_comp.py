@@ -1,4 +1,4 @@
-import astropy.table as atpy
+# import astropy.table as atpy
 import astropy.io.fits as pyfits
 import sqlutilpy as sqlutil
 import matplotlib.pyplot as plt
@@ -15,9 +15,12 @@ GT = pyfits.getdata('../data/mwsall-pix-iron.fits', 'GAIA')
 T2 = pyfits.getdata('../../loa/rvpix-loa.fits', 'RVTAB')
 GT2 = pyfits.getdata('../../loa/rvpix-loa.fits', 'GAIA')
 sdss_t = sqlutil.get(
-    '''select  phot_g_mean_mag from gaia_dr3.gaia_source as g , gaia_edr3_aux.sdssdr13bestneighbour as x,
-sdssdr14.sppparams as sp, sdssdr14.specphotoall as s where x.original_ext_source_id =s.objid and
-    g.source_id=x.source_id and (elodiervfinal between -1000 and 1000) and s.scienceprimary=1 and 
+    '''select  phot_g_mean_mag from gaia_dr3.gaia_source as g ,
+gaia_edr3_aux.sdssdr13bestneighbour as x,
+sdssdr14.sppparams as sp, sdssdr14.specphotoall as s
+where x.original_ext_source_id =s.objid and
+    g.source_id=x.source_id and (elodiervfinal between -1000 and 1000) and
+s.scienceprimary=1 and
 s.specobjid=sp.specobjid and fehadop > -6 and fehadop <10 ;''')
 sub = (T['RVS_WARN'] == 0) & (T['RR_SPECTYPE'] == 'STAR') & (T['PRIMARY']) & (
     T['SURVEY'] == 'main') & (T['PROGRAM'] == 'bright')
@@ -49,6 +52,6 @@ plt.xlabel('G [mag]')
 plt.gca().set_yscale('log')
 plt.xlim(15.8, 20.5)
 plt.ylim(10, 7e5)
-#plt.legend()
+# plt.legend()
 plt.tight_layout()
 plt.savefig('plots/survey_comparison.pdf')

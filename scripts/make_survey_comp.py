@@ -22,35 +22,48 @@ where x.original_ext_source_id =s.objid and
     g.source_id=x.source_id and (elodiervfinal between -1000 and 1000) and
 s.scienceprimary=1 and
 s.specobjid=sp.specobjid and fehadop > -6 and fehadop <10 ;''')
-sub = (T['RVS_WARN'] == 0) & (T['RR_SPECTYPE'] == 'STAR') & (T['PRIMARY']) & (
-    T['SURVEY'] == 'main') & (T['PROGRAM'] == 'bright')
-sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
-    T2['PRIMARY']) & (T2['SURVEY'] == 'main') & (T2['PROGRAM'] == 'bright')
-kw = dict(histtype='step', range=[15, 21], bins=60)
-plt.figure(figsize=(3.37, 2.5))
 
-plt.hist(GT2['PHOT_G_MEAN_MAG'][sub2],
-         color='lightgrey',
-         label='DESI DR2',
-         **kw)
-colors = list(TABLEAU_COLORS.values())
-plt.hist(GT['PHOT_G_MEAN_MAG'][sub],
-         color='black',
-         linewidth=2,
-         label='DESI DR1',
-         **kw)
+min_mag = 11
+max_mag = 21
+bins = (max_mag - min_mag) * 10
+kw = dict(histtype='step', range=[min_mag, max_mag], bins=bins)
+plt.figure(figsize=(3.37 * 2, 2.5))
+
+for program in ['dark', 'backup', 'bright']:
+    sub = (T['RVS_WARN'] == 0) & (T['RR_SPECTYPE'] == 'STAR') & (
+        T['PRIMARY']) & (T['SURVEY'] == 'main') & (T['PROGRAM'] == program)
+    sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
+        T2['PRIMARY']) & (T2['SURVEY'] == 'main') & (T2['PROGRAM'] == program)
+    ls = {'dark': '--', 'bright': None, 'backup': ':'}[program]
+    if False:
+        plt.hist(GT2['PHOT_G_MEAN_MAG'][sub2],
+                 color='lightgrey',
+                 label='DESI DR2',
+                 linestyle=ls,
+                 **kw)
+    colors = list(TABLEAU_COLORS.values())
+    plt.hist(
+        GT['PHOT_G_MEAN_MAG'][sub],
+        color='black',
+        #             linewidth=2,
+        linestyle=ls,
+        label='DESI DR1',
+        **kw)
 plt.hist(lam_t, color=colors[1], label='LAMOST LRS DR9', **kw)
 plt.hist(sdss_t, color=colors[2], label='SDSS DR14', **kw)
 plt.hist(gaia_t, color=colors[3], label='Gaia DR3 RVS', **kw)
-plt.text(18, 3e5, 'DESI DR2', color='lightgrey')
-plt.text(18, .4e5, 'DESI DR1')
-plt.text(18.4, 70, 'LAMOST DR9', color=colors[1])
-plt.text(18, 3.9e3, 'SDSS DR14', color=colors[2])
-plt.text(16.7, 100, 'Gaia DR3 RVS', color=colors[3])
-
+# plt.text(18, 3e5, 'DESI DR2', color='lightgrey')
+plt.text(12, 3e4, 'LAMOST DR9', color=colors[1], rotation=10)
+plt.text(14.5, 2e3, 'SDSS DR14', color=colors[2], rotation=20)
+plt.text(12, 1.5e5, 'Gaia DR3 RVS', color=colors[3], rotation=10)
+plt.text(18, 1.3e5, 'DESI DR1 bright')
+plt.text(13, 3000, 'DESI DR1 backup', rotation=10)
+plt.text(16.5, 2000, 'DESI DR1 dark', rotation=7)
 plt.xlabel('G [mag]')
 plt.gca().set_yscale('log')
-plt.xlim(15.8, 20.5)
+# plt.xlim(15.8, 20.5)
+plt.ylabel('N$_{stars}$/bin')
+plt.xlim(11, 21)
 plt.ylim(10, 7e5)
 # plt.legend()
 plt.tight_layout()

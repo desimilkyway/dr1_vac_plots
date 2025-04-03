@@ -180,11 +180,11 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
     coeffs = fitter(*xres[prog])
     floor_dict[prog] = np.round(coeffs[-1], 2)
     floor = floor_dict[prog]
-    #floor_dict = {'dark': 1.2, 'bright': .7, 'backup': 2}
+    # floor_dict = {'dark': 1.2, 'bright': .7, 'backup': 2}
     oplot(10**xgrid,
           np.sqrt(10**(2 * xgrid) + floor**2),
           label='floor %g km/s' % floor)
-    plt.legend()
+    plt.legend(loc='lower right')
 if False:
     with open('repeat.pkl', 'wb') as fp:
         import pickle

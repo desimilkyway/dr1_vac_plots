@@ -80,13 +80,12 @@ for i in range(2):
                    range=[[15.5, 19.5], [-.8, 1.2]],
                    bins=[60, 60],
                    norm=maco.PowerNorm(gamma=.5))[-1]
-    plt.plot(
-        zgrid,
-        zpt + feh * feh_mult + (zgrid - 16) * mag_mult,
-        color='red',
-        linestyle='--',
-        label=(r'$y= %.2f \cdot (z-16)$' + '\n' + '$ %g\cdot [Fe/H] + %g$') %
-        (mag_mult, feh_mult, zpt))
+    plt.plot(zgrid,
+             zpt + feh * feh_mult + (zgrid - 16) * mag_mult,
+             color='red',
+             linestyle='--',
+             label=(r'$y= %.2f \cdot (z-16)$' + '\n'
+                    r'$ %+g\cdot [Fe/H] %+g$') % (mag_mult, feh_mult, zpt))
     # norm=maco.LogNorm()
 
     plt.xlabel('z [mag]')

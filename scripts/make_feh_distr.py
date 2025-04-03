@@ -1,7 +1,7 @@
 import astropy.table as atpy
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.colors as maco
+# import numpy as np
+# import matplotlib.colors as maco
 import plot_preamb as pp
 
 pp.run()
@@ -25,6 +25,7 @@ plt.clf()
 cnt = 0
 cur_sel0 = main_sel & (RV_T['SURVEY'] == 'main') & (
     RV_T['PROGRAM'] == 'bright') & (RV_T['SN_R'] > 10)
+cur_sel0 = main_sel & (RV_T['PRIMARY']) & (RV_T['SN_R'] > 10)
 
 
 def betw(x, x1, x2):
@@ -36,11 +37,13 @@ fig = plt.figure(figsize=(3.37 * 1, 3.37 * .75))
 cur_sel = cur_sel0 & betw(RV_T['TEFF'], 4500, 7000) & (RV_T['VSINI'] < 30)
 opt = dict(alpha=.5, bins=100, range=[-5, .5], histtype='step')
 plt.hist(RV_T['FEH'][cur_sel], label='RVS', **opt)
-print('RV', (cur_sel & (SP_T['FEH'] < -3)).sum())
+print('RV', (cur_sel & (RV_T['FEH'] < -2)).sum())
+print('RV', (cur_sel & (RV_T['FEH'] < -3)).sum())
 
 cur_sel = cur_sel0 & (SP_T['BESTGRID'] != 's_rdesi1') & betw(
     SP_T['TEFF'], 4500, 7000)
 plt.hist(SP_T['FEH'][cur_sel], label='SP', **opt)
+print('SP', (cur_sel & (SP_T['FEH'] < -2)).sum())
 print('SP', (cur_sel & (SP_T['FEH'] < -3)).sum())
 
 plt.gca().set_yscale('log')

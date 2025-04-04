@@ -1,6 +1,6 @@
 import astropy.table as atpy
 import numpy as np
-import sqlutilpy as sqlutil
+import sqlutil_cache as sqlutil
 import collections
 import feh_correct
 import fit_scatter

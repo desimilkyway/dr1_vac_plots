@@ -2,10 +2,9 @@ import astropy.table as atpy
 import numpy as np
 import matplotlib.pyplot as plt
 import plot_preamb as pp
-import crossmatcher
+import crossmatcher_cache as crossmatcher
 import scipy.optimize
 from config import main_file, data_path, external_path
-import sqlutilpy as sqlutil
 
 fname = data_path + '/' + main_file
 
@@ -57,41 +56,22 @@ def betw(x, x1, x2):
 
 
 ra, dec = RV_T['TARGET_RA'], RV_T['TARGET_DEC']
-HOST = open('WSDB', 'r').read()
 
-conn = sqlutil.getConnection(host=HOST, db='wsdb', driver='psycopg')
-if False:
-    D_GA = crossmatcher.doit(
-        'galah_dr4.allstar',
-        ra,
-        dec,
-        'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp,rv_comp_1',
-        conn=conn,
-        asDict=True)
-else:
-    D_GA = crossmatcher.doit_by_key(
-        'galah_dr4.allstar',
-        G_T['SOURCE_ID'],
-        'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp,rv_comp_1',
-        key_col='gaiadr3_source_id',
-        conn=conn,
-        asDict=True)
+D_GA = crossmatcher.doit_by_key(
+    'galah_dr4.allstar',
+    G_T['SOURCE_ID'],
+    'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp,rv_comp_1',
+    key_col='gaiadr3_source_id',
+    db='wsdb',
+    asDict=True)
 D_GA['rv_comp_1'][D_GA['flag_sp'] != 0] = np.nan
 
-if False:
-    D_AP = crossmatcher.doit('apogee_dr17.allstar',
-                             ra,
-                             dec,
-                             '''vhelio_avg,starflag''',
-                             conn=conn,
-                             asDict=True)
-else:
-    D_AP = crossmatcher.doit_by_key('apogee_dr17.allstar',
-                                    G_T['SOURCE_ID'],
-                                    '''vhelio_avg,starflag''',
-                                    key_col='gaiaedr3_source_id',
-                                    conn=conn,
-                                    asDict=True)
+D_AP = crossmatcher.doit_by_key('apogee_dr17.allstar',
+                                G_T['SOURCE_ID'],
+                                '''vhelio_avg,starflag''',
+                                key_col='gaiaedr3_source_id',
+                                db='wsdb',
+                                asDict=True)
 D_AP['vhelio_avg'][D_AP['starflag'] != 0] = np.nan
 
 plt.clf()

@@ -1,7 +1,7 @@
 import astropy.table as atpy
 import astropy.io.fits as pyfits
 import match_lists
-import crossmatcher
+import crossmatcher_cache as crossmatcher
 import numpy as np
 from config import main_file, data_path, external_path
 
@@ -29,7 +29,7 @@ D_AP = crossmatcher.doit('apogee_dr17.allstar',
 D_GA = crossmatcher.doit('galah_dr4.allstar',
                          TT['TARGET_RA'],
                          TT['TARGET_DEC'],
-                         'fe_h,teff,logg,fe_h,mg_fe,ca_fe,rv_comp_1',
+                         'teff,logg,fe_h,mg_fe,ca_fe,rv_comp_1',
                          db='wsdb',
                          asDict=True)
 corr = TT['VRAD'] * 0

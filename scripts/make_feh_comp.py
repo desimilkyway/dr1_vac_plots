@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as maco
 import plot_preamb as pp
-import crossmatcher
+import crossmatcher_cache as crossmatcher
 import match_lists
 from matplotlib.colors import TABLEAU_COLORS
 import scipy.optimize

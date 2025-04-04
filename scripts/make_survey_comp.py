@@ -1,6 +1,6 @@
 # import astropy.table as atpy
 import astropy.io.fits as pyfits
-import sqlutilpy as sqlutil
+import sqlutil_cache as sqlutil
 import matplotlib.pyplot as plt
 import plot_preamb as pp
 from matplotlib.colors import TABLEAU_COLORS
@@ -37,12 +37,12 @@ for program in ['dark', 'backup', 'bright']:
     # sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
     #    T2['PRIMARY']) & (T2['SURVEY'] == 'main') & (T2['PROGRAM'] == program)
     ls = {'dark': '--', 'bright': None, 'backup': ':'}[program]
-    if False:
-        # plt.hist(GT2['PHOT_G_MEAN_MAG'][sub2],
-        #         color='lightgrey',
-        #         label='DESI DR2',
-        #         linestyle=ls,
-        #         **kw)
+    #if False:
+    # plt.hist(GT2['PHOT_G_MEAN_MAG'][sub2],
+    #         color='lightgrey',
+    #         label='DESI DR2',
+    #         linestyle=ls,
+    #         **kw)
     colors = list(TABLEAU_COLORS.values())
     plt.hist(
         GT['PHOT_G_MEAN_MAG'][sub],

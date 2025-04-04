@@ -7,7 +7,6 @@ import crossmatcher
 import match_lists
 from matplotlib.colors import TABLEAU_COLORS
 import scipy.optimize
-import sqlutilpy as sqlutil
 from config import main_file, data_path, external_path
 import feh_correct
 
@@ -123,15 +122,12 @@ ra, dec = RV_T['TARGET_RA'], RV_T['TARGET_DEC']
 
 D_SAGA = get_saga(ra, dec)
 
-HOST = open('WSDB', 'r').read()
-conn = sqlutil.getConnection(host=HOST, db='wsdb', driver='psycopg')
-
 D_GES = get_ges(RV_T['TARGET_RA'], RV_T['TARGET_DEC'])
 D_GA = crossmatcher.doit_by_key(
     'galah_dr4.allstar',
     G_T['SOURCE_ID'],
     'fe_h,teff,logg,mg_fe,ca_fe,c_fe,flag_fe_h,flag_sp',
-    conn=conn,
+    db='wsdb',
     asDict=True,
     key_col='gaiadr3_source_id')
 
@@ -141,7 +137,7 @@ D_AP = crossmatcher.doit_by_key(
     '''alpha_m,fe_h,c_fe,n_fe,o_fe,na_fe,mg_fe,si_fe,ca_fe,ti_fe,mn_fe,ni_fe,ce_fe,vhelio_avg,logg,teff,teff_spec,logg_spec,
             aspcapflag,starflag, fe_h_flag''',
     key_col='gaiaedr3_source_id',
-    conn=conn,
+    db='wsdb',
     asDict=True)
 
 D_GAIA = crossmatcher.doit_by_key(
@@ -150,7 +146,7 @@ D_GAIA = crossmatcher.doit_by_key(
     '''mh_gspspec,teff_gspspec,fem_gspspec,logg_gspspec,
         coalesce(flags_gspspec like '0000000000000%', false) as good_flag ''',
     key_col='source_id',
-    conn=conn,
+    db='wsdb',
     asDict=True)
 
 D_GAIA['fe_h'] = D_GAIA['mh_gspspec']

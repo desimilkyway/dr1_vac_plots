@@ -4,21 +4,17 @@ import matplotlib.pyplot as plt
 import plot_preamb as pp
 import crossmatcher
 import scipy.optimize
+from config import main_file, data_path, external_path
+import sqlutilpy as sqlutil
+
+fname = data_path + '/' + main_file
 
 pp.run()
 
-RV_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'RVTAB',
-                         mask_invalid=False)
-SP_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'SPTAB',
-                         mask_invalid=False)
-FM_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'FIBERMAP',
-                         mask_invalid=False)
-G_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                        'GAIA',
-                        mask_invalid=False)
+RV_T = atpy.Table().read(fname, 'RVTAB', mask_invalid=False)
+SP_T = atpy.Table().read(fname, 'SPTAB', mask_invalid=False)
+FM_T = atpy.Table().read(fname, 'FIBERMAP', mask_invalid=False)
+G_T = atpy.Table().read(fname, 'GAIA', mask_invalid=False)
 
 
 def combiner(*args):
@@ -49,8 +45,10 @@ def fitter(teff, feh_ref, feh_obs):
 
 main_sel = (RV_T['RVS_WARN'] == 0) & (RV_T['RR_SPECTYPE'] == 'STAR')
 cnt = 0
+
 # cur_sel0 = main_sel & (RV_T['SURVEY'] == 'main') & (
 #    RV_T['PROGRAM'] == 'bright') & (RV_T['SN_R'] > 10)
+
 cur_sel0 = main_sel & (RV_T['SURVEY'] == 'main')  # & (RV_T['SN_R'] > 10)
 
 
@@ -60,7 +58,6 @@ def betw(x, x1, x2):
 
 ra, dec = RV_T['TARGET_RA'], RV_T['TARGET_DEC']
 HOST = open('WSDB', 'r').read()
-import sqlutilpy as sqlutil
 
 conn = sqlutil.getConnection(host=HOST, db='wsdb', driver='psycopg')
 if False:

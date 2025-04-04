@@ -4,14 +4,16 @@ import sqlutilpy as sqlutil
 import matplotlib.pyplot as plt
 import plot_preamb as pp
 from matplotlib.colors import TABLEAU_COLORS
+from config import main_file, data_path, external_path
+
+fname = data_path + '/' + main_file
 
 pp.run()
-fname = '../data/mwsall-pix-iron.fits'
-T = pyfits.getdata('../data/mwsall-pix-iron.fits', 'RVTAB')
-SP_T = pyfits.getdata('../data/mwsall-pix-iron.fits', 'SPTAB')
+T = pyfits.getdata(fname, 'RVTAB')
+SP_T = pyfits.getdata(fname, 'SPTAB')
 lam_t = sqlutil.get('select gaia_g_mean_mag from lamost_dr9.lrs_stellar')
 gaia_t = sqlutil.get('select phot_g_mean_mag from gaia_dr3_aux.gaia_source_rv')
-GT = pyfits.getdata('../data/mwsall-pix-iron.fits', 'GAIA')
+GT = pyfits.getdata(fname, 'GAIA')
 # T2 = pyfits.getdata('../../loa/rvpix-loa.fits', 'RVTAB')
 # GT2 = pyfits.getdata('../../loa/rvpix-loa.fits', 'GAIA')
 sdss_t = sqlutil.get(

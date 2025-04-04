@@ -3,14 +3,16 @@ import astropy.io.fits as pyfits
 import match_lists
 import crossmatcher
 import numpy as np
+from config import main_file, data_path, external_path
 
-GT = pyfits.getdata('../data/mwsall-pix-iron.fits', 'GAIA')
-FT = pyfits.getdata('../data/mwsall-pix-iron.fits', 'FIBERMAP')
-TT = atpy.Table().read('../data/mwsall-pix-iron.fits', 'RVTAB')
+fname = data_path + '/' + main_file
+GT = pyfits.getdata(fname, 'GAIA')
+FT = pyfits.getdata(fname, 'FIBERMAP')
+TT = atpy.Table().read(fname, 'RVTAB')
 xind = (TT['PROGRAM'] == 'backup') & (TT['SURVEY'] == 'main')
 TT = TT[xind]
 GT = GT[xind]
-tiles = atpy.Table().read('external/tiles-iron.fits')
+tiles = atpy.Table().read(external_path + '/tiles-iron.fits')
 
 tiles = tiles[(tiles['PROGRAM'] == 'backup') & (tiles['SURVEY'] == 'main')]
 DD, xind = match_lists.match_lists(TT['TARGET_RA'], TT['TARGET_DEC'],

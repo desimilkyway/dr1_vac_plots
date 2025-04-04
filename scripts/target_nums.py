@@ -1,11 +1,12 @@
 from desitarget import targetmask as tm
 import astropy.table as atpy
 import re
+from config import main_file, data_path, external_path
 
-T0 = atpy.Table().read('../data/mwsall-pix-iron.fits', mask_invalid=False)
-TF0 = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                        'FIBERMAP',
-                        mask_invalid=False)
+fname = data_path + '/' + main_file
+
+T0 = atpy.Table().read(fname, mask_invalid=False)
+TF0 = atpy.Table().read(fname, 'FIBERMAP', mask_invalid=False)
 
 
 def fixer(x):

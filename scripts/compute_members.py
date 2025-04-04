@@ -7,18 +7,22 @@ import fit_scatter
 import multiprocessing as mp
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
+from config import main_file, data_path, external_path
+
+fname = data_path + '/' + main_file
 
 
 def get_lists():
-    PL = atpy.Table().read('external/paceli_allmembs.fits')
+    PL = atpy.Table().read(external_path + '/paceli_allmembs.fits')
     PL = PL[PL['mem_fixed'] > .9]
     PL['name'] = PL['key']
     # PL['source_id'] is already there
-    BAU = atpy.Table().read('external/vasiliev_baumgardt2021_members.fits')
+    BAU = atpy.Table().read(external_path +
+                            '/vasiliev_baumgardt2021_members.fits')
     BAU = BAU[BAU['memberprob'] > .9]
     # name and source_id are already there
 
-    CA = atpy.Table().read('external/cantat_gaugin_ocmem_2020.fits')
+    CA = atpy.Table().read(external_path + '/cantat_gaugin_ocmem_2020.fits')
     CA = CA[CA['proba'] > .9]
     rid = np.arange(len(CA))
     xid = CA['GaiaDR2']
@@ -38,8 +42,8 @@ def get_lists():
         ))
     CA['source_id'] = CA_dr3_id
     CA['name'] = CA['Cluster']
-    IB = atpy.Table().read('external/ibata24_members.fits')
-    IB2 = atpy.Table().read('external/ibata24_streams.fits')
+    IB = atpy.Table().read(external_path + '/ibata24_members.fits')
+    IB2 = atpy.Table().read(external_path + '/ibata24_streams.fits')
     stream_map = {}
     for i in range(len(IB2)):
         stream_map[IB2['s_ID'][i]] = IB2['Name'][i]
@@ -51,7 +55,6 @@ def get_lists():
 
 
 if __name__ == '__main__':
-    fname = '../data/mwsall-pix-iron.fits'
     RV_T = atpy.Table().read(fname, 'RVTAB', mask_invalid=False)
     SP_T = atpy.Table().read(fname, 'SPTAB', mask_invalid=False)
     G_T = atpy.Table().read(fname, 'GAIA', mask_invalid=False)

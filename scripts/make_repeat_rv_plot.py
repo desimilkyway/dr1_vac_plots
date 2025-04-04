@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from idlplotInd import plot, oplot
 import numpy as np
 import plot_preamb as pp
+from config import main_file, data_path, external_path, rvexp_path
+
+fname = data_path + '/' + main_file
 
 
 def func(p, args):
@@ -24,7 +27,12 @@ def fitter(xerr, yerr):
 
 
 pp.run()
-fs = glob.glob('../../rv_variability/rvtabs_iron/*exp*fits')
+fs = glob.glob('/*exp*fits')
+mask = rvexp_path + '/*exp*fits'
+fs = glob.glob(mask)
+if len(fs) == 0:
+    raise Exception(f'failed to find files in the mask {mask}')
+
 tabs = []
 for f in fs:
     T = atpy.Table().read(f, 'RVTAB', mask_invalid=False)
@@ -50,7 +58,6 @@ for f in fs:
 tabs = atpy.vstack(tabs)
 tab_p = tabs.to_pandas()
 conn1 = duckdb.connect(':memory:')
-fname = '../data/mwsall-pix-iron.fits'
 
 Tstack = atpy.Table().read(fname, mask_invalid=False)
 Tstack2 = atpy.Table().read(fname, 'FIBERMAP', mask_invalid=False)

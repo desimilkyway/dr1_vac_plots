@@ -2,9 +2,12 @@ import astropy.table as atpy
 import numpy as np
 import glob
 import astropy.io.fits as pyfits
+from config import main_file, data_path, external_path, rvexp_path
 
-T = atpy.Table().read('../data/mwsall-pix-iron.fits')
-TG = atpy.Table().read('../data/mwsall-pix-iron.fits', 'GAIA')
+fname = data_path + '/' + main_file
+
+T = atpy.Table().read(fname)
+TG = atpy.Table().read(fname, 'GAIA')
 print(len(T))
 #    The total number of fitted coadded spectra included in the release: 6,372,607
 qq = T[T['RR_SPECTYPE'] == 'STAR']
@@ -13,7 +16,7 @@ print(len(np.unique(qq['TARGETID'])))
 
 print(len(np.unique(TG['SOURCE_ID'])))
 #    The number of unique Gaia sources: 4,920,596
-fs = glob.glob('../rv_variability/rvtabs_iron/rvpix_exp-*')
+fs = glob.glob(rvexp_path + '/rvpix_exp-*')
 print(sum([len(pyfits.getdata(_)) for _ in fs]))
 #    The number of single-epoch spectra with stellar atmospheric parameters and radial velocities: 10,012,925
 R = {}

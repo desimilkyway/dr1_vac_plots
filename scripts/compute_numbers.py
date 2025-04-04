@@ -1,9 +1,10 @@
 import astropy.table as atpy
 import numpy as np
+from config import main_file, data_path, external_path
 
-RV_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'RVTAB',
-                         mask_invalid=False)
+fname = data_path + '/' + main_file
+
+RV_T = atpy.Table().read(fname, 'RVTAB', mask_invalid=False)
 # Colour-magnitude distribution by survey/program
 surveys = np.unique(RV_T['SURVEY'][:])
 mysurveys = ['cmx', 'special', 'sv1', 'sv2', 'sv3', 'main']
@@ -26,9 +27,7 @@ print(np.median(RV_T['VRAD_ERR'][sub]))
 sub = ((RV_T['SURVEY'] == 'main') & (RV_T['PROGRAM'] == 'bright') &
        (RV_T['RR_SPECTYPE'] == 'STAR') & (RV_T['RVS_WARN'] == 0)
        & RV_T['PRIMARY'])
-SP_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'SPTAB',
-                         mask_invalid=False)
+SP_T = atpy.Table().read(fname, 'SPTAB', mask_invalid=False)
 sub = ((RV_T['RR_SPECTYPE'] == 'STAR') & (RV_T['RVS_WARN'] == 0)
        & RV_T['PRIMARY'])
 print('RV MP', (sub & (RV_T['FEH'] < -2)).sum())

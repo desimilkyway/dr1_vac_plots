@@ -7,8 +7,11 @@ import crossmatcher
 import match_lists
 from matplotlib.colors import TABLEAU_COLORS
 import scipy.optimize
-
 import sqlutilpy as sqlutil
+from config import main_file, data_path, external_path
+import feh_correct
+
+fname = data_path + '/' + main_file
 
 
 def betw(x, x1, x2):
@@ -26,7 +29,7 @@ def combiner(*args):
 
 def get_saga(ra, dec):
     SAGAT = atpy.Table().read(
-        'external/saga_cleaned_catalog.tsv',
+        external_path + '/saga_cleaned_catalog.tsv',
         format='ascii',
     )
     DD, xind = match_lists.match_lists(ra, dec, SAGAT['RAdeg'],
@@ -38,7 +41,7 @@ def get_saga(ra, dec):
 
 
 def get_ges(ra, dec):
-    GEST = atpy.Table().read('external/gaia_eso_cat_dr4_esoarch.fits',
+    GEST = atpy.Table().read(external_path + '/gaia_eso_cat_dr4_esoarch.fits',
                              mask_invalid=False)
     sub = (((GEST['SFLAGS'] == '                                       ') |
             (GEST['SFLAGS'] == 'NIA                                    ')) &
@@ -107,18 +110,10 @@ def fitter_cut(teff, logg, feh_ref, feh_obs):
 
 pp.run()
 
-RV_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'RVTAB',
-                         mask_invalid=False)
-SP_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'SPTAB',
-                         mask_invalid=False)
-FM_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'FIBERMAP',
-                         mask_invalid=False)
-G_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                        'GAIA',
-                        mask_invalid=False)
+RV_T = atpy.Table().read(fname, 'RVTAB', mask_invalid=False)
+SP_T = atpy.Table().read(fname, 'SPTAB', mask_invalid=False)
+FM_T = atpy.Table().read(fname, 'FIBERMAP', mask_invalid=False)
+G_T = atpy.Table().read(fname, 'GAIA', mask_invalid=False)
 
 main_sel = (RV_T['RVS_WARN'] == 0) & (RV_T['RR_SPECTYPE'] == 'STAR')
 
@@ -207,7 +202,6 @@ RV_T['FEH_CALIB2'] = (RV_T['FEH'] - np.poly1d(coeff_rv2[:3])
                       (RV_T['LOGG'] < cut_rv) - np.poly1d(coeff_rv2[3:])
                       (np.log10(RV_T['TEFF'] / teff_ref) / logteff_scale) *
                       (RV_T['LOGG'] >= cut_rv))
-import feh_correct
 
 xf1 = feh_correct.calibrate(RV_T['FEH'],
                             RV_T['TEFF'],

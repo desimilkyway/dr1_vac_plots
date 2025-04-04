@@ -3,12 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as maco
 import plot_preamb as pp
+from config import main_file, data_path, external_path
+
+fname = data_path + '/' + main_file
 
 pp.run()
 
-RV_T = atpy.Table().read('../data/mwsall-pix-iron.fits',
-                         'RVTAB',
-                         mask_invalid=False)
+RV_T = atpy.Table().read(fname, 'RVTAB', mask_invalid=False)
 
 main_sel = (RV_T['RVS_WARN'] == 0) & (RV_T['RR_SPECTYPE'] == 'STAR')
 

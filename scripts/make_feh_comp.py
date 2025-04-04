@@ -1,10 +1,11 @@
 import astropy.table as atpy
+import astropy.units as auni
+import astropy.coordinates as acoo
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as maco
 import plot_preamb as pp
 import crossmatcher_cache as crossmatcher
-import match_lists
 from matplotlib.colors import TABLEAU_COLORS
 import scipy.optimize
 from config import main_file, data_path, external_path
@@ -27,15 +28,28 @@ def combiner(*args):
 
 
 def get_saga(ra, dec):
-    SAGAT = atpy.Table().read(
-        external_path + '/saga_cleaned_catalog.tsv',
-        format='ascii',
-    )
-    DD, xind = match_lists.match_lists(ra, dec, SAGAT['RAdeg'],
-                                       SAGAT['DECdeg'], 1. / 3600)
-    SAGA_R = {'fe_h': np.zeros(len(ra)) + np.nan}
-    SAGA_R['fe_h'][np.isfinite(DD)] = SAGAT['[M/H]'].filled(
-        np.nan)[xind[np.isfinite(DD)]]
+    # Read SAGA data
+    SAGAT = atpy.Table().read(external_path + '/saga_cleaned_catalog.tsv',
+                              format='ascii')
+
+    # Build Astropy SkyCoord objects
+    c_input = acoo.SkyCoord(ra=ra * auni.deg, dec=dec * auni.deg)
+    c_saga = acoo.SkyCoord(ra=SAGAT['RAdeg'] * auni.deg,
+                           dec=SAGAT['DECdeg'] * auni.deg)
+
+    # Match input coordinates to SAGA catalog
+    idx, sep2d, _ = c_input.match_to_catalog_sky(c_saga)
+
+    # We only accept matches within 1 arcsecond (1")
+    # 1" = 1/3600 degrees
+    match_mask = (sep2d.arcsec < 1.0)
+
+    # Prepare output. Initialize fe_h with NaN.
+    SAGA_R = {'fe_h': np.full(len(ra), np.nan, dtype=float)}
+
+    matched_fe_h = SAGAT['[M/H]'].filled(np.nan)[idx]
+    SAGA_R['fe_h'][match_mask] = matched_fe_h[match_mask]
+
     return SAGA_R
 
 
@@ -46,13 +60,23 @@ def get_ges(ra, dec):
             (GEST['SFLAGS'] == 'NIA                                    ')) &
            (GEST['E_FEH'] < .1))
     GEST = GEST[sub]
+    c_input = acoo.SkyCoord(ra=ra * auni.deg, dec=dec * auni.deg)
+    c_ges = acoo.SkyCoord(ra=GEST['RA'], dec=GEST['DECLINATION'])
 
-    DD, xind = match_lists.match_lists(ra, dec, GEST['RA'],
-                                       GEST['DECLINATION'], 1. / 3600)
-    GES = {'fe_h': np.zeros(len(ra)) + np.nan}
+    # Match input coordinates to SAGA catalog
+    idx, sep2d, _ = c_input.match_to_catalog_sky(c_ges)
 
-    GES['fe_h'][np.isfinite(DD)] = GEST['FEH'][xind[np.isfinite(DD)]]
-    return GES
+    # We only accept matches within 1 arcsecond (1")
+    # 1" = 1/3600 degrees
+    match_mask = (sep2d.arcsec < 1.0)
+
+    # Prepare output. Initialize fe_h with NaN.
+    GES_R = {'fe_h': np.full(len(ra), np.nan, dtype=float)}
+
+    matched_fe_h = GEST['FEH'][idx]
+    GES_R['fe_h'][match_mask] = matched_fe_h[match_mask]
+
+    return GES_R
 
 
 teff_ref = 5000

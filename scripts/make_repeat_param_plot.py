@@ -125,16 +125,16 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
         PAIRS['rvs_warn1'] == 0) & (PAIRS['rvs_warn2'] == 0)
     erange = [-2, 0]
     sel2 = sel1 & (np.abs(PAIRS['mjd1'] - PAIRS['mjd2']) > 1)
-    SS = scipy.stats.binned_statistic(np.log10(comb_err[sel1]),
-                                      delt[sel1],
-                                      funcer,
-                                      range=erange,
-                                      bins=bins)
-    SC = scipy.stats.binned_statistic(np.log10(comb_err[sel1]),
-                                      delt[sel1],
-                                      'count',
-                                      range=erange,
-                                      bins=bins)
+    SS1 = scipy.stats.binned_statistic(np.log10(comb_err[sel1]),
+                                       delt[sel1],
+                                       funcer,
+                                       range=erange,
+                                       bins=bins)
+    SC1 = scipy.stats.binned_statistic(np.log10(comb_err[sel1]),
+                                       delt[sel1],
+                                       'count',
+                                       range=erange,
+                                       bins=bins)
     SS2 = scipy.stats.binned_statistic(np.log10(comb_err[sel2]),
                                        delt[sel2],
                                        funcer,
@@ -147,30 +147,30 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
                                        bins=bins)
 
     plt.subplot(1, 3, i + 1)
-    plot(10**(SS.bin_edges[:-1] + .5 * np.diff(SS.bin_edges)), (SS.statistic),
-         ps=3,
-         ylog=True,
-         xlog=True,
-         yr=[0.01, .99],
-         xr=[0.01, .99],
-         xtitle=r'$\sqrt{\frac{\sigma_1^2+\sigma_2^2}{2}}$ [dex]',
-         noerase=True,
-         title=f'Survey, program: {survey},{prog}',
-         ind=SC.statistic > 100)
-    oplot(10**(SS2.bin_edges[:-1] + .5 * np.diff(SS2.bin_edges)),
-          (SS2.statistic),
-          ps=3,
-          color='grey',
-          ind=SC2.statistic > 100)
+    sel1 = SC1.statistic > 100
+    sel2 = SC2.statistic > 100
+    A1, B1 = (10**(SS1.bin_edges[:-1] + .5 * np.diff(SS1.bin_edges)),
+              (SS1.statistic))
+    A2, B2 = (10**(SS2.bin_edges[:-1] + .5 * np.diff(SS2.bin_edges)),
+              (SS2.statistic))
+    plt.plot(A1[sel1], B1[sel1], 'k.')
+    plt.xlabel(r'$\sqrt{\frac{\sigma_1^2+\sigma_2^2}{2}}$ [dex]')
+    plt.text(.015, .6, f'{survey},{prog}')
+    plt.gca().set_yscale('log')
+    plt.gca().set_xscale('log')
+    plt.plot(A2[sel2], B2[sel2], '.', color='grey')
     if i == 0:
         plt.ylabel(r'$\frac{1}{\sqrt{2}}$ StdDev([Fe/H]$_1$-[Fe/H]$_2$) [dex]')
     else:
         plt.gca().yaxis.set_major_formatter(plt.NullFormatter())
     floor = {'dark': .03, 'bright': .03, 'backup': .03}[prog]
-    oplot(10**xgrid,
-          np.sqrt(10**(2 * xgrid) * 1.1**2 + floor**2),
-          label='floor %s dex' % floor)
+    plt.plot(10**xgrid,
+             np.sqrt(10**(2 * xgrid) * 1.1**2 + floor**2),
+             label='floor %s dex' % floor,
+             color='black')
     plt.legend()
+    plt.xlim(0.01, .99)
+    plt.ylim(0.01, .99)
 plt.gcf().set_size_inches(3.37 * 2, 3.37 * .7)
 plt.tight_layout()
 plt.subplots_adjust(wspace=0, hspace=0)

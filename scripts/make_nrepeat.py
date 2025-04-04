@@ -2,10 +2,7 @@ import glob
 import astropy.table as atpy
 import duckdb
 import sqlutilpy as sqlutil
-import scipy.stats
 import matplotlib.pyplot as plt
-from idlplotInd import plot, oplot
-import numpy as np
 import plot_preamb as pp
 
 pp.run()

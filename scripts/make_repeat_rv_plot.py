@@ -4,7 +4,6 @@ import duckdb
 import sqlutilpy as sqlutil
 import scipy.stats
 import matplotlib.pyplot as plt
-from idlplotInd import plot, oplot
 import numpy as np
 import plot_preamb as pp
 from config import main_file, data_path, external_path, rvexp_path
@@ -166,16 +165,13 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
     A2, B2 = (10**(SS2.bin_edges[:-1] + .5 * np.diff(SS2.bin_edges)),
               SS2.statistic)
     xres[prog] = A2[xsub2], B2[xsub2]
-    plot(A1,
-         B1,
-         ps=3,
-         ylog=True,
-         xlog=True,
-         yr=[.5, 30],
-         xr=[.11, 30],
-         noerase=True,
-         ind=xsub1)
-    oplot(A2, B2, ps=3, color='grey', ind=xsub2)
+    plt.plot(A1[xsub1], B1[xsub1], 'k.')
+    plt.ylim(.5, 30)
+    plt.xlim(.11, 30)
+    plt.gca().set_yscale('log')
+    plt.gca().set_xscale('log')
+
+    plt.plot(A2[xsub2], B2[xsub2], '.', color='grey')
     if i == 1:
         plt.ylabel(r'$\frac{1}{\sqrt{2}}$ StdDev($V_1-V_2$) [km/s]')
     # else:
@@ -187,14 +183,11 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
     floor_dict[prog] = np.round(coeffs[-1], 2)
     floor = floor_dict[prog]
     # floor_dict = {'dark': 1.2, 'bright': .7, 'backup': 2}
-    oplot(10**xgrid,
-          np.sqrt(10**(2 * xgrid) + floor**2),
-          label='floor %g km/s' % floor)
+    plt.plot(10**xgrid,
+             np.sqrt(10**(2 * xgrid) + floor**2),
+             label='floor %g km/s' % floor,
+             color='black')
     plt.legend(loc='lower right')
-if False:
-    with open('repeat.pkl', 'wb') as fp:
-        import pickle
-        pickle.dump(xres, fp)
 plt.tight_layout()
 plt.subplots_adjust(wspace=0, hspace=0)
 plt.savefig('plots/repeats_accuracy.pdf')

@@ -86,7 +86,7 @@ for i in range(2):
     # norm=maco.LogNorm()
 
     plt.xlabel(mag_name + ' [mag]')
-    plt.text(17, 1, '[Fe/H]=$%d$' % feh, color='white')
+    plt.text(17, -.4, '[Fe/H]=$%d$' % feh, color='white')
     plt.xlim(15.5, 19.5)
 
     im.set_rasterized(True)

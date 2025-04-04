@@ -15,6 +15,7 @@ A3, B3 = cc.doit(frac, feh=-1.5, nsamp=nsamp)
 plt.figure(figsize=(3.37, 2.5))
 shift = 2.5 * np.log(frac2 / frac)  # dr1 vs dr2
 plt.plot(A1, B1, label='[Fe/H]=$-2.5$', color='blue')
+plt.gca().set_xscale('log')
 
 plt.xlabel('Distance [kpc]', )
 plt.ylabel('M$_V$ [mag]', )
@@ -30,6 +31,6 @@ plt.fill_between(A1,
                  fc='grey',
                  alpha=0.2)
 plt.ylim(0, -13)
-
+plt.xlim(10, 250)
 plt.text(35, -8, '>10 stars in DESI')
 plt.savefig('plots//maglim10.pdf')

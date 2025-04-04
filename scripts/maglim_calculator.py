@@ -1,7 +1,6 @@
 import minimint
 import numpy as np
 import imf
-import quick_hist
 
 
 def fancy_sampler(iso, imf, Ntot, nbatch=100):
@@ -21,9 +20,10 @@ def doit(hh_frac, thresh=10, feh=-2, nsamp=1e7):
     res = []
     for curd in dists:
         curr = r + 5 * np.log10(curd * 1e3) - 5
-        curhh = quick_hist.quick_hist((g - r, curr),
-                                      range=[[-.3, 1.8], [16, 19]],
-                                      nbins=[30, 30])
+        curhh = np.histogram2d(g - r,
+                               curr,
+                               range=[[-.3, 1.8], [16, 19]],
+                               bins=[30, 30])[0]
         curn = (curhh * hh_frac).sum()
         xrat = curn / thresh
         res.append(totlum + 2.5 * np.log10(xrat))

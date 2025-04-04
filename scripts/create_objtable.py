@@ -248,7 +248,7 @@ def main():
         table_type = "minimal"  # fallback
 
     # Location of input file
-    input_file = "objs.txt"
+    input_file = "output/objs.txt"
 
     # Read the data with astropy.table
     try:

@@ -190,7 +190,7 @@ print('RV', coeff_rv2[:3][::-1], '\n', coeff_rv2[3:][::-1], '\n cut', cut_rv,
       '\n', 'SP', coeff_sp2[:3][::-1], '\n', coeff_sp2[3:][::-1], '\n cut',
       cut_sp)
 
-fp = open('feh_coeffs.txt', 'w')
+fp = open('output/feh_coeffs.txt', 'w')
 print('RV', 'low', ("%s %s %s") % tuple(coeff_rv2[:3][::-1]), file=fp)
 print('RV', 'high', ("%s %s %s") % tuple(coeff_rv2[3:][::-1]), file=fp)
 print('SP', 'low', ("%s %s %s") % tuple(coeff_sp2[:3][::-1]), file=fp)

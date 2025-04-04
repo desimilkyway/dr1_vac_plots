@@ -10,7 +10,7 @@ TT = atpy.Table().read('../data/mwsall-pix-iron.fits', 'RVTAB')
 xind = (TT['PROGRAM'] == 'backup') & (TT['SURVEY'] == 'main')
 TT = TT[xind]
 GT = GT[xind]
-tiles = atpy.Table().read('tiles-iron.fits')
+tiles = atpy.Table().read('external/tiles-iron.fits')
 
 tiles = tiles[(tiles['PROGRAM'] == 'backup') & (tiles['SURVEY'] == 'main')]
 DD, xind = match_lists.match_lists(TT['TARGET_RA'], TT['TARGET_DEC'],
@@ -41,4 +41,4 @@ for t in np.unique(tileid):
 atpy.Table({
     'TARGETID': TT['TARGETID'],
     'VRAD_BIAS': corr,
-}).write('backup_correction.fits', overwrite=True)
+}).write('output/backup_correction.fits', overwrite=True)

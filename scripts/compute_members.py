@@ -110,7 +110,7 @@ if __name__ == '__main__':
                                              (feh[sub2], feh_err[sub2])),
                              feh[sub2], feh_err[sub2]))
 
-        pdf_file = PdfPages('multipage_plots.pdf')
+        pdf_file = PdfPages('tmp_plots/multipage_plots.pdf')
         for tp, it in zip(to_print, queue):
             (ret_mean, ret_sig, warn,
              _), cur_feh, cur_efeh = it[0].get(), it[1], it[2]
@@ -131,7 +131,7 @@ if __name__ == '__main__':
             pdf_file.savefig()
             plt.close()
         pdf_file.close()
-        with open('objs.txt', 'w') as fp:
+        with open('output/objs.txt', 'w') as fp:
             print('type name count', end=' ', file=fp)
             for pp in ['rvs', 'sp']:
                 end = {'rvs': ' ', 'sp': None}[pp]

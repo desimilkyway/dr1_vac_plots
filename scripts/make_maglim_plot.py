@@ -1,5 +1,4 @@
 import maglim_calculator as cc
-from idlplotInd import plot, oplot
 import matplotlib.pyplot as plt
 import plot_preamb as pp
 import numpy as np
@@ -15,16 +14,13 @@ A2, B2 = cc.doit(frac, feh=-2, nsamp=nsamp)
 A3, B3 = cc.doit(frac, feh=-1.5, nsamp=nsamp)
 plt.figure(figsize=(3.37, 2.5))
 shift = 2.5 * np.log(frac2 / frac)  # dr1 vs dr2
-plot(A1,
-     B1,
-     xlog=True,
-     xtitle='Distance [kpc]',
-     ytitle='M$_V$ [mag]',
-     label='[Fe/H]=$-2.5$',
-     color='blue')
-oplot(A2, B2, label='[Fe/H]=$-2.0$', color='green')
-oplot(A3, B3, label='[Fe/H]=$-1.5$', color='red')
-oplot(A2, B2 + shift, label='DESI DR2', color='grey')
+plt.plot(A1, B1, label='[Fe/H]=$-2.5$', color='blue')
+
+plt.xlabel('Distance [kpc]', )
+plt.ylabel('M$_V$ [mag]', )
+plt.plot(A2, B2, label='[Fe/H]=$-2.0$', color='green')
+plt.plot(A3, B3, label='[Fe/H]=$-1.5$', color='red')
+plt.plot(A2, B2 + shift, label='DESI DR2', color='grey')
 plt.legend()
 plt.tight_layout()
 plt.fill_between(A1,

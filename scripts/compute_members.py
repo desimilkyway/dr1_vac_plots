@@ -10,20 +10,15 @@ import matplotlib.pyplot as plt
 
 
 def get_lists():
-    PL = atpy.Table().read(
-        '/home/skoposov/science/desi/spphot_fit/validation/paceli/'
-        'allmembs.fits')
+    PL = atpy.Table().read('external/paceli_allmembs.fits')
     PL = PL[PL['mem_fixed'] > .9]
     PL['name'] = PL['key']
     # PL['source_id'] is already there
-    BAU = atpy.Table().read(
-        '/home/skoposov/science/datasets/vasiliev_baumgardt2021/'
-        'cluster_members.fits')
+    BAU = atpy.Table().read('external/vasiliev_baumgardt2021_members.fits')
     BAU = BAU[BAU['memberprob'] > .9]
     # name and source_id are already there
 
-    CA = atpy.Table().read(
-        '/home/skoposov/science/datasets/cantat_gaugin_ocmem_2020.fits')
+    CA = atpy.Table().read('external/cantat_gaugin_ocmem_2020.fits')
     CA = CA[CA['proba'] > .9]
     rid = np.arange(len(CA))
     xid = CA['GaiaDR2']
@@ -43,10 +38,8 @@ def get_lists():
         ))
     CA['source_id'] = CA_dr3_id
     CA['name'] = CA['Cluster']
-    IB = atpy.Table().read(
-        '/home/skoposov/science/datasets/Streamfinder_Ibata24/members.fits')
-    IB2 = atpy.Table().read(
-        '/home/skoposov/science/datasets/Streamfinder_Ibata24/streams.fits')
+    IB = atpy.Table().read('external/ibata24_members.fits')
+    IB2 = atpy.Table().read('external/ibata24_streams.fits')
     stream_map = {}
     for i in range(len(IB2)):
         stream_map[IB2['s_ID'][i]] = IB2['Name'][i]

@@ -240,12 +240,8 @@ def create_full_table(entries):
     return latex_lines
 
 
-def main():
+def main(table_type, ofname):
     # Decide which table type to produce (default "minimal" or "full")
-    if len(sys.argv) > 1:
-        table_type = sys.argv[1].lower()
-    else:
-        table_type = "minimal"  # fallback
 
     # Location of input file
     input_file = "output/objs.txt"
@@ -307,10 +303,12 @@ def main():
         latex_lines = create_full_table(entries)
 
     # Print LaTeX lines to stdout
-    if latex_lines:
-        for line in latex_lines:
-            print(line)
+    with open(ofname, 'w') as fp:
+        if latex_lines:
+            for line in latex_lines:
+                print(line, file=fp)
 
 
 if __name__ == "__main__":
-    main()
+    main('minimal', 'output/objs_minimal.tex')
+    main('full', 'output/objs_full.tex')

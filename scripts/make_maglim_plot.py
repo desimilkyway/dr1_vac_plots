@@ -5,7 +5,7 @@ import numpy as np
 
 pp.run()
 
-frac = 0.17  # completeness in desi DR1
+frac = 0.2  # completeness in desi DR1
 frac2 = 0.38  # in DESI DR2
 # frac = 0.2  # in dr1
 nsamp = 1e7

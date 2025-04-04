@@ -40,3 +40,11 @@ print('SP MP', (sub & (SP_T['FEH'] < -3)
 print('RV MP', (sub & (RV_T['FEH'] < -4)).sum())
 print('SP MP', (sub & (SP_T['FEH'] < -4)
                 & (SP_T['BESTGRID'] != 's_rdesi1')).sum())
+
+sub = ((RV_T['RR_SPECTYPE'] == 'STAR') & (RV_T['RVS_WARN'] == 0))
+rv = RV_T['VRAD_ERR'][sub]
+print([np.percentile(rv, _) for _ in [1, 50, 99]])
+sub = ((RV_T['RR_SPECTYPE'] == 'STAR') & (RV_T['RVS_WARN'] == 0) &
+       (RV_T['SURVEY'] == 'main') & (RV_T['PROGRAM'] == 'backup'))
+rv = RV_T['VRAD_ERR'][sub]
+print([np.percentile(rv, _) for _ in [1, 50, 99]])

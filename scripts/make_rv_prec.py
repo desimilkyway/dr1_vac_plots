@@ -52,29 +52,26 @@ plt.clf()
 fig = plt.figure(figsize=(3.37 * 1, 3.37 * .6))
 cnt = 0
 cnt = 0
+min_time = 180
+max_time = 220
+efftime = SC_T['TSNR2_LRG'] * 12.15
 cur_sel = (main_sel & (RV_T['SURVEY'] == 'main') &
            (RV_T['PROGRAM'] == 'bright') & (RV_T['VSINI'] < 30)
            & betw(RV_T['TEFF'], 4500, 7000)
-           & betw(SC_T['TSNR2_LRG'] * 12.15, 180, 220))
+           & betw(efftime, min_time, max_time))
 zmag = 22.5 - 2.5 * np.log10(FM_T['FLUX_Z'])
 
 zgrid = np.linspace(15.5, 19, 100)
-fit_sub = ((RV_T['RR_SPECTYPE'] == 'STAR') & (RV_T['RVS_WARN'] == 0) &
-           (RV_T['SURVEY'] == 'main') & (RV_T['PROGRAM'] == 'bright') &
-           (RV_T['VSINI'] < 30)
-           & betw(RV_T['TEFF'], 4500, 7000)
-           & betw(SC_T['TSNR2_LRG'] * 12.15, 180, 220) & betw(zmag, 15.5, 19))
+fit_sub = cur_sel & betw(zmag, 15.5, 19)
 coeffs = fitter(zmag[fit_sub], RV_T['VRAD_ERR'][fit_sub], RV_T['FEH'][fit_sub])
 coeffs = np.round(coeffs, 2)
-mag_mult = coeffs[1]
-feh_mult = coeffs[2]
-zpt = coeffs[0]
+zpt, mag_mult, feh_mult = coeffs
 gs = gridspec.GridSpec(1, 3, width_ratios=[1, 1, 0.03])
 for i in range(2):
     ax = fig.add_subplot(gs[0, i])
     # plt.subplot(1, 2, i + 1)
     feh = {0: 0, 1: -2}[i]
-    cur_sel1 = cur_sel & betw(RV_T['FEH'] - feh, -0.05, 0.05)
+    cur_sel1 = cur_sel & betw(RV_T['FEH'] - feh, -0.1, 0.1)
     im = ax.hist2d(zmag[cur_sel1],
                    np.log10(RV_T['VRAD_ERR'][cur_sel1]),
                    range=[[15.5, 19.5], [-.8, 1.2]],

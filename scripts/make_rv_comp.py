@@ -118,16 +118,17 @@ for jj, program in enumerate(['bright', 'backup', 'dark']):
         if lab == 'Gaia':
             cur_xind = xind & (G_T['RADIAL_VELOCITY_ERROR'] < 5)
         delt = (RV_T['VRAD'] - xv)[cur_xind]
-        print(program, lab, np.nanmedian(delt))
+        print(program, lab, np.nanmedian(delt), np.isfinite(delt).sum())
         if np.isfinite(delt).sum() < 50:
             delt = [-1000]
         if program != 'dark':
             col = ['#1f77b4', '#ff7f0e', '#2ca02c'][ii]
         else:
             col = '#d62728'
+
         plt.hist(delt,
-                 range=[-15, 15],
-                 bins=60,
+                 range=[-17, 17],
+                 bins=34 * 2,
                  histtype='step',
                  density=True,
                  color=col,
@@ -139,6 +140,7 @@ for jj, program in enumerate(['bright', 'backup', 'dark']):
         plt.legend()
     plt.text(-15, [.15, .08, .1][jj], 'survey=main\n' + 'program=' + program)
     plt.axvline(0, linestyle='--', color='black')
+    plt.xlim(-17, 17)
 plt.xlabel('RV$_{DESI}$ - RV$_{ref}$ [km/s]')
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.)

@@ -152,24 +152,23 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
                                        bins=bins)
 
     plt.subplot(3, 1, i + 1)
-    xsub = SC1.statistic > 100
-    A, B = (10**(SS1.bin_edges[:-1] + .5 * np.diff(SS1.bin_edges)),
-            SS1.statistic)
-    xres[prog] = A[xsub], B[xsub]
-    plot(A,
-         B,
+    xsub1 = SC1.statistic > 100
+    xsub2 = SC2.statistic > 100
+    A1, B1 = (10**(SS1.bin_edges[:-1] + .5 * np.diff(SS1.bin_edges)),
+              SS1.statistic)
+    A2, B2 = (10**(SS2.bin_edges[:-1] + .5 * np.diff(SS2.bin_edges)),
+              SS2.statistic)
+    xres[prog] = A2[xsub2], B2[xsub2]
+    plot(A1,
+         B1,
          ps=3,
          ylog=True,
          xlog=True,
          yr=[.5, 30],
          xr=[.11, 30],
          noerase=True,
-         ind=xsub)
-    oplot(10**(SS2.bin_edges[:-1] + .5 * np.diff(SS2.bin_edges)),
-          (SS2.statistic),
-          ps=3,
-          color='grey',
-          ind=SC2.statistic > 100)
+         ind=xsub1)
+    oplot(A2, B2, ps=3, color='grey', ind=xsub2)
     if i == 1:
         plt.ylabel(r'$\frac{1}{\sqrt{2}}$ StdDev($V_1-V_2$) [km/s]')
     # else:
@@ -197,7 +196,9 @@ plt.clf()
 fig = plt.figure(figsize=(3.37 * 1, 3.37 * .8))
 for i, prog in enumerate(['dark', 'bright', 'backup']):
     sel1 = (PAIRS['program'] == prog) & (PAIRS['survey'] == survey) & (
-        PAIRS['rvs_warn1'] == 0) & (PAIRS['rvs_warn2'] == 0)
+        PAIRS['rvs_warn1'] == 0) & (PAIRS['rvs_warn2'] == 0) & (
+            np.abs(PAIRS['mjd1'] - PAIRS['mjd2']) > 1)
+
     plt.subplot(3, 1, i + 1)
     floor = floor_dict[prog]
     xdelt = delt / (comb_err**2 + floor**2)**.5

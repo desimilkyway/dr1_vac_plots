@@ -12,8 +12,8 @@ SP_T = pyfits.getdata('../data/mwsall-pix-iron.fits', 'SPTAB')
 lam_t = sqlutil.get('select gaia_g_mean_mag from lamost_dr9.lrs_stellar')
 gaia_t = sqlutil.get('select phot_g_mean_mag from gaia_dr3_aux.gaia_source_rv')
 GT = pyfits.getdata('../data/mwsall-pix-iron.fits', 'GAIA')
-T2 = pyfits.getdata('../../loa/rvpix-loa.fits', 'RVTAB')
-GT2 = pyfits.getdata('../../loa/rvpix-loa.fits', 'GAIA')
+# T2 = pyfits.getdata('../../loa/rvpix-loa.fits', 'RVTAB')
+# GT2 = pyfits.getdata('../../loa/rvpix-loa.fits', 'GAIA')
 sdss_t = sqlutil.get(
     '''select  phot_g_mean_mag from gaia_dr3.gaia_source as g ,
 gaia_edr3_aux.sdssdr13bestneighbour as x,
@@ -32,15 +32,15 @@ plt.figure(figsize=(3.37 * 2, 2.5))
 for program in ['dark', 'backup', 'bright']:
     sub = (T['RVS_WARN'] == 0) & (T['RR_SPECTYPE'] == 'STAR') & (
         T['PRIMARY']) & (T['SURVEY'] == 'main') & (T['PROGRAM'] == program)
-    sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
-        T2['PRIMARY']) & (T2['SURVEY'] == 'main') & (T2['PROGRAM'] == program)
+    # sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
+    #    T2['PRIMARY']) & (T2['SURVEY'] == 'main') & (T2['PROGRAM'] == program)
     ls = {'dark': '--', 'bright': None, 'backup': ':'}[program]
     if False:
-        plt.hist(GT2['PHOT_G_MEAN_MAG'][sub2],
-                 color='lightgrey',
-                 label='DESI DR2',
-                 linestyle=ls,
-                 **kw)
+        # plt.hist(GT2['PHOT_G_MEAN_MAG'][sub2],
+        #         color='lightgrey',
+        #         label='DESI DR2',
+        #         linestyle=ls,
+        #         **kw)
     colors = list(TABLEAU_COLORS.values())
     plt.hist(
         GT['PHOT_G_MEAN_MAG'][sub],

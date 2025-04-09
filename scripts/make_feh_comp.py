@@ -9,9 +9,14 @@ import crossmatcher_cache as crossmatcher
 from matplotlib.colors import TABLEAU_COLORS
 import scipy.optimize
 from config import main_file, data_path, external_path
-import feh_correct
 
 fname = data_path + '/' + main_file
+
+teff_ref = 5000
+logteff_scale = 0.1
+
+# minteff, maxteff = 4500, 7000
+minteff, maxteff = 500, 37000
 
 
 def betw(x, x1, x2):
@@ -79,13 +84,6 @@ def get_ges(ra, dec):
     return GES_R
 
 
-teff_ref = 5000
-logteff_scale = 0.1
-
-# minteff, maxteff = 4500, 7000
-minteff, maxteff = 500, 37000
-
-
 def func(p, X, Y):
     return np.mean(
         np.abs(Y - np.poly1d(p)((X - np.log10(teff_ref)) / logteff_scale)))
@@ -109,20 +107,27 @@ def func_cut(p, X, Y, Z, cut):
     return np.mean(np.abs(Z - pred))
 
 
-def fitter_cut(teff, logg, feh_ref, feh_obs):
+def fitter_cut(teff, logg, feh_ref, feh_obs, sel0=None):
     X, Y, Z = np.log10(teff), logg, feh_obs - feh_ref
-    aind = main_sel & np.isfinite(X + Y + Z) & betw(teff, minteff, maxteff)
+    aind = sel0 & np.isfinite(X + Y + Z) & betw(teff, minteff, maxteff)
     X, Y, Z = np.array(X[aind]), np.array(Y[aind]), np.array(Z[aind])
     print('Number of stars', aind.sum())
-    print('Percentiles', np.percentile(teff[aind], 0.5),
-          np.percentile(teff[aind], 99.5), np.percentile(logg, .5),
-          np.percentile(logg[aind], 99.5))
+    perc_val = 0.2, 99.8  # 10 stars of 5000
+    print('Percentiles')
+    for q in ['teff', 'logg']:
+        print(q, end=' ')
+        arr = {'teff': teff, 'logg': logg}[q][aind]
+        for curp in perc_val:
+            print(np.round(np.percentile(arr, curp), 1), end=' ')
+        print(' ')
     funcs = []
     cuts = np.arange(0, 6, 0.1)
     for cut in cuts:
         R1 = scipy.optimize.minimize(func_cut,
                                      np.zeros(6),
-                                     args=(X, Y, Z, cut))
+                                     args=(X, Y, Z, cut),
+                                     method='Nelder-Mead')
+        R1 = scipy.optimize.minimize(func_cut, R1.x, args=(X, Y, Z, cut))
         funcs.append(R1.fun)
     best_cut = cuts[np.argmin(funcs)]
     R1 = scipy.optimize.minimize(func_cut,
@@ -138,12 +143,14 @@ SP_T = atpy.Table().read(fname, 'SPTAB', mask_invalid=False)
 FM_T = atpy.Table().read(fname, 'FIBERMAP', mask_invalid=False)
 G_T = atpy.Table().read(fname, 'GAIA', mask_invalid=False)
 
-main_sel = (RV_T['RVS_WARN'] == 0) & (RV_T['RR_SPECTYPE'] == 'STAR')
-
-cur_sel0 = main_sel & (RV_T['SURVEY'] == 'main') & (RV_T['SN_R'] > 10)
+main_sel0 = (RV_T['RVS_WARN'] == 0) & (RV_T['RR_SPECTYPE'] == 'STAR')
+main_sel = main_sel0 & (RV_T['SURVEY'] == 'main') & (RV_T['SN_R'] > 10)
+rv_sel = (RV_T['FEH_ERR'] < 0.1) & (RV_T['VSINI'] < 30)
+sp_sel = ((SP_T['BESTGRID'] != 's_rdesi1') & (SP_T['COVAR'][:, 0, 0]**.5 < .1))
 
 ra, dec = RV_T['TARGET_RA'], RV_T['TARGET_DEC']
 
+#  fetch surveys
 D_SAGA = get_saga(ra, dec)
 
 D_GES = get_ges(RV_T['TARGET_RA'], RV_T['TARGET_DEC'])
@@ -179,47 +186,93 @@ D_AP['fe_h'][(D_AP['fe_h_flag'] != 0) | (D_AP['starflag'] != 0) |
              (D_AP['aspcapflag'] != 0)] = np.nan
 D_GA['fe_h'][(D_GA['flag_fe_h'] != 0) | (D_GA['flag_sp'] != 0)] = np.nan
 
-coeff_sp = fitter(SP_T['TEFF'], combiner(D_GA["fe_h"], D_AP['fe_h']),
-                  SP_T['FEH'])
-coeff_rv = fitter(RV_T['TEFF'], combiner(D_GA["fe_h"], D_AP['fe_h']),
-                  RV_T['FEH'])
+print('---------')
+print('SP')
+comb_feh = combiner(D_GA["fe_h"], D_AP['fe_h'])
+
+cut_sp, coeff_sp = fitter_cut(SP_T['TEFF'],
+                              SP_T['LOGG'],
+                              comb_feh,
+                              SP_T['FEH'],
+                              sel0=main_sel & sp_sel)
+print('---------')
+print('RV')
+cut_rv, coeff_rv = fitter_cut(RV_T['TEFF'],
+                              RV_T['LOGG'],
+                              comb_feh,
+                              RV_T['FEH'],
+                              sel0=main_sel & rv_sel)
+print('---------')
 coeff_sp = np.round(coeff_sp, 3)
 coeff_rv = np.round(coeff_rv, 3)
 
-SP_T['FEH_CALIB'] = SP_T['FEH'] - np.poly1d(coeff_sp)(
-    np.log10(SP_T['TEFF'] / teff_ref) / logteff_scale)
-RV_T['FEH_CALIB'] = RV_T['FEH'] - np.poly1d(coeff_rv)(
-    np.log10(RV_T['TEFF'] / teff_ref) / logteff_scale)
-# print('RV', coeff_rv[::-1], 'SP', coeff_sp[::-1])
-print('SP')
-cut_sp, coeff_sp2 = fitter_cut(SP_T['TEFF'], SP_T['LOGG'],
-                               combiner(D_GA["fe_h"], D_AP['fe_h']),
-                               SP_T['FEH'])
-print('RV')
-cut_rv, coeff_rv2 = fitter_cut(RV_T['TEFF'], RV_T['LOGG'],
-                               combiner(D_GA["fe_h"], D_AP['fe_h']),
-                               RV_T['FEH'])
-coeff_sp2 = np.round(coeff_sp2, 3)
-coeff_rv2 = np.round(coeff_rv2, 3)
-print('RV', coeff_rv2[:3][::-1], '\n', coeff_rv2[3:][::-1], '\n cut', cut_rv,
-      '\n', 'SP', coeff_sp2[:3][::-1], '\n', coeff_sp2[3:][::-1], '\n cut',
-      cut_sp)
+coeff_rv_low = coeff_rv[:3][::-1]
+coeff_rv_high = coeff_rv[3:][::-1]
+coeff_sp_low = coeff_sp[:3][::-1]
+coeff_sp_high = coeff_sp[3:][::-1]
+print('RV', coeff_rv_low, '\n', coeff_rv_high, '\n cut', cut_rv, '\n', 'SP',
+      coeff_sp_low, '\n', coeff_sp_high, '\n cut', cut_sp)
 
 fp = open('output/feh_coeffs.txt', 'w')
-print('RV', 'low', ("%s %s %s") % tuple(coeff_rv2[:3][::-1]), file=fp)
-print('RV', 'high', ("%s %s %s") % tuple(coeff_rv2[3:][::-1]), file=fp)
-print('SP', 'low', ("%s %s %s") % tuple(coeff_sp2[:3][::-1]), file=fp)
-print('SP', 'high', ("%s %s %s") % tuple(coeff_sp2[3:][::-1]), file=fp)
-fp.close()
+print('RV',
+      'low', ("%s %s %s %s") % ((cut_rv, ) + tuple(coeff_rv_low)),
+      file=fp)
+print('RV',
+      'high', ("%s %s %s %s") % ((cut_rv, ) + tuple(coeff_rv_high)),
+      file=fp)
 
-SP_T['FEH_CALIB2'] = (SP_T['FEH'] - np.poly1d(coeff_sp2[:3])
+print('SP',
+      'low', ("%s %s %s %s") % ((cut_sp, ) + tuple(coeff_sp_low)),
+      file=fp)
+print('SP',
+      'high', ("%s %s %s %s") % ((cut_sp, ) + tuple(coeff_sp_high)),
+      file=fp)
+fp.close()
+STR = f'''
+    cuts = {{'RVS': {cut_rv}, 'SP': {cut_sp}}}
+    coeffs_low = {{'RVS': {np.array2string(coeff_rv_low, separator=',')},
+'SP':  {np.array2string(coeff_sp_low, separator=',')} }}
+    coeffs_high = {{'RVS': {np.array2string(coeff_rv_high, separator=',')},
+ 'SP':  {np.array2string(coeff_sp_high, separator=',')} }}
+'''
+print(STR)
+print('-------------')
+
+# RVS, low
+print(f"    RVS & $\\log g <{cut_rv:.1f}$  "
+      f"& ${coeff_rv_low[0]:.3f}$ "
+      f"& ${coeff_rv_low[1]:.3f}$ "
+      f"& ${coeff_rv_low[2]:.3f}$ \\\\")
+
+# RVS, high
+print(f"    RVS & $\\log g \\geq {cut_rv:.1f}$ "
+      f"& ${coeff_rv_high[0]:.3f}$ "
+      f"& ${coeff_rv_high[1]:.3f}$ "
+      f"& ${coeff_rv_high[2]:.3f}$ \\\\")
+
+# SP, low
+print(f"    SP  & $\\log g <{cut_sp:.1f}$ "
+      f"& ${coeff_sp_low[0]:.3f}$ "
+      f"& ${coeff_sp_low[1]:.3f}$ "
+      f"& ${coeff_sp_low[2]:.3f}$ \\\\")
+
+# SP, high
+print(f"    SP  & $\\log g \\geq {cut_sp:.1f}$ "
+      f"& ${coeff_sp_high[0]:.3f}$ "
+      f"& ${coeff_sp_high[1]:.3f}$ "
+      f"& ${coeff_sp_high[2]:.3f}$ \\\\")
+print('-----')
+import feh_correct  # noqa
+
+SP_T['FEH_CALIB2'] = (SP_T['FEH'] - np.poly1d(coeff_sp_low[::-1])
                       (np.log10(SP_T['TEFF'] / teff_ref) / logteff_scale) *
-                      (SP_T['LOGG'] < cut_sp) - np.poly1d(coeff_sp2[3:])
+                      (SP_T['LOGG'] < cut_sp) - np.poly1d(coeff_sp_high[::-1])
                       (np.log10(SP_T['TEFF'] / teff_ref) / logteff_scale) *
                       (SP_T['LOGG'] >= cut_sp))
-RV_T['FEH_CALIB2'] = (RV_T['FEH'] - np.poly1d(coeff_rv2[:3])
+
+RV_T['FEH_CALIB2'] = (RV_T['FEH'] - np.poly1d(coeff_rv_low[::-1])
                       (np.log10(RV_T['TEFF'] / teff_ref) / logteff_scale) *
-                      (RV_T['LOGG'] < cut_rv) - np.poly1d(coeff_rv2[3:])
+                      (RV_T['LOGG'] < cut_rv) - np.poly1d(coeff_rv_high[::-1])
                       (np.log10(RV_T['TEFF'] / teff_ref) / logteff_scale) *
                       (RV_T['LOGG'] >= cut_rv))
 
@@ -238,29 +291,32 @@ def checker(x1, x2):
     assert (np.allclose(x1[xind], x2[xind]))
 
 
-checker(xf1, RV_T['FEH_CALIB2'])
-checker(xf2, SP_T['FEH_CALIB2'])
+if True:
+    checker(xf1, RV_T['FEH_CALIB2'])
+    checker(xf2, SP_T['FEH_CALIB2'])
+else:
+    print('!! NOT CHECKING feh_correct !!! ')
 
 plt.clf()
 fig = plt.figure(figsize=(3.37 * 1, 3.37 * 1.4))
 pad = 10
 gs = plt.GridSpec(300 + pad, 200)
 cnt = 0
-for x1 in range(2):
+
+for x1, pipe in enumerate(['RVS', 'SP']):
     for x2 in range(3):
-        T = [RV_T, SP_T][x1]
-        titl = ['RVS', 'SP'][x1]
-        if x1 == 0:
-            cur_sel = cur_sel0 & (RV_T['FEH_ERR'] < 0.1) & (RV_T['VSINI'] < 30)
+        curT = {'RVS': RV_T, 'SP': SP_T}[pipe]
+        titl = pipe
+        if pipe == 'RVS':
+            cur_sel = main_sel & rv_sel
         else:
-            cur_sel = cur_sel0 & (SP_T['BESTGRID'] != 's_rdesi1') & (
-                SP_T['COVAR'][:, 0, 0]**.5 < .1)
-        cur_sel = cur_sel & betw(T['TEFF'], minteff, maxteff)
+            cur_sel = main_sel & sp_sel
+        cur_sel = cur_sel & betw(curT['TEFF'], minteff, maxteff)
         # plt.subplot(3, 2, 1 + 2 * x2 + x1)
         plt.subplot(gs[100 * x2 + pad * (x2 == 2):100 * x2 + 100 + pad *
                        (x2 == 2), 100 * x1:100 * x1 + 100])
         COMP = [D_GA, D_AP, D_SAGA][x2]
-        curfeh = T["FEH"]
+        curfeh = curT["FEH"]
         if x2 < 2:
             plt.hist2d(COMP['fe_h'][cur_sel],
                        curfeh[cur_sel],
@@ -300,15 +356,14 @@ for var_name in ['FEH', 'FEH_CALIB2']:
         COMP = [D_GA, D_AP, D_GAIA, D_SAGA][(cnt)]
         tit = ['GALAH', 'APOGEE', 'Gaia', 'SAGA'][cnt]
         bins = [100, 100, 100, 10][cnt]
-        for i, (T, label) in enumerate(zip([RV_T, SP_T], ['RVS', 'SP'])):
+        for i, (curT, label) in enumerate(zip([RV_T, SP_T], ['RVS', 'SP'])):
             if i == 0:
-                cur_sel = cur_sel0 & (T['FEH_ERR'] < .1) & (T['VSINI'] < 30)
+                cur_sel = main_sel & rv_sel
             else:
-                cur_sel = cur_sel0 & (SP_T['BESTGRID'] != 's_rdesi1') & (
-                    SP_T['COVAR'][:, 0, 0]**.5 < .1)
-            curfeh = T[var_name]
+                cur_sel = main_sel & sp_sel
+            curfeh = curT[var_name]
 
-            cur_sel = cur_sel & betw(T['TEFF'], minteff,
+            cur_sel = cur_sel & betw(curT['TEFF'], minteff,
                                      maxteff)  # & (T['FEH_ERR'] < .1)
             delt = curfeh[cur_sel] - COMP['fe_h'][cur_sel]
             delt = delt[np.isfinite(delt)]
@@ -344,3 +399,60 @@ for var_name in ['FEH', 'FEH_CALIB2']:
         'FEH': 'plots/feh_compar_delta.pdf',
         'FEH_CALIB2': 'plots/feh_compar_delta_calibrated.pdf'
     }[var_name])
+
+if True:
+    plt.clf()
+    print('temporary validation plot')
+    # this is internal validation
+    from idlplotInd import tvhist2d  # noqa
+    tvhist2d(SP_T['LOGG'],
+             comb_feh - SP_T['FEH_CALIB2'],
+             -1,
+             6,
+             -1,
+             1,
+             normx='sum',
+             vmax=.2,
+             bins=[40, 40],
+             subplot=221,
+             ind=sp_sel,
+             title='SP',
+             ytitle='delta feh')
+    tvhist2d(RV_T['LOGG'],
+             comb_feh - RV_T['FEH_CALIB2'],
+             -1,
+             6,
+             -1,
+             1,
+             normx='sum',
+             vmax=.2,
+             bins=[40, 40],
+             subplot=223,
+             ind=rv_sel,
+             title='RVS',
+             xtitle='logg')
+
+    tvhist2d(SP_T['TEFF'],
+             comb_feh - SP_T['FEH_CALIB2'],
+             3500,
+             8000,
+             -1,
+             1,
+             normx='sum',
+             vmax=.2,
+             ind=sp_sel,
+             subplot=222,
+             bins=[40, 40])
+    tvhist2d(RV_T['TEFF'],
+             comb_feh - RV_T['FEH_CALIB2'],
+             3500,
+             8000,
+             -1,
+             1,
+             normx='sum',
+             vmax=.2,
+             subplot=224,
+             bins=[40, 40],
+             ind=rv_sel,
+             xtitle='teff')
+    plt.savefig('tmp_plots/valid.pdf')

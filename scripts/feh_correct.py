@@ -16,14 +16,15 @@ def calibrate(feh_orig, teff, logg, pipeline='RVS', release='DR1'):
     logteff_scale = 0.1
     teff_ref = 5000
     bounds = {
-        'RVS': [[-0.5, 5.1], [4200, 6600]],
-        'SP': [[0, 5.4], [4000, 6700]]
+        'RVS': [[1.8, 5.5], [4200, 6600]],
+        'SP': [[0, 5.1], [4000, 6600]]
     }
-    cuts = {'RVS': 4.4, 'SP': 3.6}
-    coeffs_low = {'RVS': [0.197, -0.785, 0.417], 'SP': [0.112, 0.195, -0.162]}
+
+    cuts = {'RVS': 4.3, 'SP': 3.5}
+    coeffs_low = {'RVS': [0.197, -0.809, 0.441], 'SP': [0.113, 0.215, -0.146]}
     coeffs_high = {
-        'RVS': [0.038, -0.281, 0.084],
-        'SP': [0.041, -0.095, -0.117]
+        'RVS': [0.039, -0.284, 0.079],
+        'SP': [0.116, -0.216, -0.081]
     }
 
     coeff_low = coeffs_low[pipeline]

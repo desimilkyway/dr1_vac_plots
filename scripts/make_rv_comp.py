@@ -115,7 +115,7 @@ for jj, program in enumerate(['bright', 'backup', 'dark']):
         plt.gca().xaxis.set_major_formatter(plt.NullFormatter())
     if cnt in [1, 3]:
         plt.legend()
-    plt.text(-15, [.15, .08, .1][jj], 'survey=main\n' + 'program=' + program)
+    plt.text(-15, [.15, .08, .1][jj], 'main,' + program)
     plt.axvline(0, linestyle='--', color='black')
     plt.xlim(-17, 17)
 plt.xlabel('RV$_{DESI}$ - RV$_{ref}$ [km/s]')

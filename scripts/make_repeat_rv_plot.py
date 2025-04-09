@@ -15,13 +15,14 @@ def func(p, args):
     xerr, yerr = args
     err_calib = np.sqrt(p[0]**2 * xerr**2 + p[1]**2)
     ret = np.sum(np.abs(np.log10(yerr) - np.log10(err_calib)))
-    print(ret, p)
+    #print(ret, p)
     return ret
 
 
 def fitter(xerr, yerr):
     args = ((xerr, yerr), )
     R = scipy.optimize.minimize(func, [1, 1], args=args, method='Nelder-Mead')
+    R = scipy.optimize.minimize(func, R.x, args=args)
     return R.x
 
 
@@ -129,7 +130,8 @@ plt.clf()
 survey = 'main'
 bins = 20
 fig = plt.figure(figsize=(3.37 * 1, 3.37 * .9))
-xres = {}
+xres2 = {}
+xres1 = {}
 floor_dict = {}
 for i, prog in enumerate(['dark', 'bright', 'backup']):
     sel1 = (PAIRS['program'] == prog) & (PAIRS['survey'] == survey) & (
@@ -164,28 +166,33 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
               SS1.statistic)
     A2, B2 = (10**(SS2.bin_edges[:-1] + .5 * np.diff(SS2.bin_edges)),
               SS2.statistic)
-    xres[prog] = A2[xsub2], B2[xsub2]
-    plt.plot(A1[xsub1], B1[xsub1], 'k.')
+    xres2[prog] = A2[xsub2], B2[xsub2]
+    xres1[prog] = A1[xsub2], B1[xsub2]
+    plt.plot(A1[xsub1], B1[xsub1], '.', color='grey')
     plt.ylim(.5, 30)
     plt.xlim(.11, 30)
     plt.gca().set_yscale('log')
     plt.gca().set_xscale('log')
 
-    plt.plot(A2[xsub2], B2[xsub2], '.', color='grey')
+    plt.plot(A2[xsub2], B2[xsub2], '.', color='black')
     if i == 1:
         plt.ylabel(r'$\frac{1}{\sqrt{2}}$ StdDev($V_1-V_2$) [km/s]')
     # else:
     # plt.gca().yaxis.set_major_formatter(plt.NullFormatter())
     if i == 2:
         plt.xlabel(r'$\sqrt{\frac{\sigma_1^2+\sigma_2^2}{2}}$ [km/s]')
-    plt.text(.2, 10, f'Survey, program: {survey},{prog}')
-    coeffs = fitter(*xres[prog])
-    floor_dict[prog] = np.round(coeffs[-1], 2)
+    plt.text(.2, 10, f'{survey},{prog}')
+    coeffs2 = fitter(*xres2[prog])
+    print(prog, coeffs2)
+    coeffs1 = fitter(*xres1[prog])
+    print(prog, 'all', coeffs1)
+    floor_dict[prog] = np.round(coeffs2[-1], 1)
     floor = floor_dict[prog]
     # floor_dict = {'dark': 1.2, 'bright': .7, 'backup': 2}
     plt.plot(10**xgrid,
              np.sqrt(10**(2 * xgrid) + floor**2),
-             label='floor %g km/s' % floor,
+             label='floor %.1f km/s' % floor,
+             linewidth=1,
              color='black')
     plt.legend(loc='lower right')
 plt.tight_layout()
@@ -210,13 +217,12 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
     plt.plot(xgrid,
              scipy.stats.norm(0, 1).pdf(xgrid) * sel1.sum() * (xr[1] - xr[0]) /
              nbins,
-             color='red')
-    plt.text(.6,
-             .7,
-             f'Survey, program:\n {survey},{prog}',
-             transform=plt.gca().transAxes)
+             color='red',
+             label='${\mathcal N}(0,1)$')
+    plt.text(.6, .7, f'{survey},{prog}', transform=plt.gca().transAxes)
 
-    # if i == 0:
+    if i == 0:
+        plt.legend()
     plt.ylabel(r'N/bin')
     if i < 2:
         plt.gca().xaxis.set_major_formatter(plt.NullFormatter())

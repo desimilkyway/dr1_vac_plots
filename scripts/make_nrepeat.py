@@ -41,11 +41,19 @@ sid, cnt, dmjd = sqlutil.get(
     conn=conn1,
     driver='duckdb')
 fig = plt.figure(figsize=(3.37, 3.37 * .75))
-for i, limit in enumerate([1, 10, 100, 1000]):
-    plt.hist(cnt[dmjd < limit],
-             label='<%d day' % limit,
+limits = [0, 1, 10, 100, 1000]
+for i in range(len(limits) - 1):
+    limit1, limit2 = limits[i], limits[i + 1]
+    if limit1 == 0:
+        lab = r'$\phantom{1d \leq} \delta t <%d$ d' % (limit2)
+    if limit1 == 100:
+        lab = r'$%d$ d$ \leq  \delta t$ ' % (limit1)
+    else:
+        lab = r'$%d$ d$ \leq \delta t <%d$ d' % (limit1, limit2)
+    plt.hist(cnt[(dmjd < limit2) & (dmjd >= limit1)],
+             label=lab,
              range=[0.5, 50.5],
-             bins=51,
+             bins=50,
              histtype='step',
              alpha=0.5,
              color=['blue', 'green', 'red', 'orange'][i])

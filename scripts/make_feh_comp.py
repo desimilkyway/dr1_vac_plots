@@ -323,6 +323,14 @@ for x1, pipe in enumerate(['RVS', 'SP']):
                        range=[[-2.5, .6], [-2.5, .6]],
                        bins=[50, 50],
                        norm=maco.PowerNorm(gamma=0.5, vmax=100))
+            for xx in 'xy':
+                plt.gca().tick_params(axis=xx,
+                                      which='both',
+                                      labelcolor='black',
+                                      color='white')
+            for xx in plt.gca().spines.keys():
+                plt.gca().spines[xx].set_color("white")
+            plt.ylim(-2.49, .6)
             plt.gci().set_rasterized(True)
             if x1 == 0:
                 plt.text(-2., 0.2, ['GALAH', 'APOGEE'][x2], color='white')

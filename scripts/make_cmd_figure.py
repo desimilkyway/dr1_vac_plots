@@ -36,6 +36,14 @@ for survey, program in [('sv3', 'bright'), ('main', 'bright'),
     plt.gci().set_rasterized(True)
     cnt += 1
     #plt.title(f'{survey},{program}')
+    for xx in 'xy':
+        plt.gca().tick_params(axis=xx,
+                              which='both',
+                              labelcolor='black',
+                              color='white')
+    for xx in plt.gca().spines.keys():
+        plt.gca().spines[xx].set_color("white")
+    plt.gca().tick_params(top=False, which='both')
 
     plt.xlabel('g-r [mag]')
     plt.ylim(21.5, 15.5)
@@ -60,6 +68,14 @@ plt.hist2d(G_T['BP_RP'][cur_sel],
            norm=maco.PowerNorm(gamma=.5))
 
 plt.gca().set_rasterized(True)
+for xx in 'xy':
+    plt.gca().tick_params(axis=xx,
+                          which='both',
+                          labelcolor='black',
+                          color='white')
+for xx in plt.gca().spines.keys():
+    plt.gca().spines[xx].set_color("white")
+plt.gca().tick_params(top=False, which='both')
 plt.ylim(20, 11)
 #plt.title('main,backup')
 plt.text(1, 11.4, 'main,backup', color='white')

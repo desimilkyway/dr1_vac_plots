@@ -23,8 +23,8 @@ for survey, program in [('main', 'bright'), ('main', 'dark'),
     plt.subplot(1, 3, cnt + 1)
     plt.hist2d(RV_T['TARGET_RA'][cur_sel],
                RV_T['TARGET_DEC'][cur_sel],
-               bins=[360, 120],
-               range=[[0, 360], [-30, 90]],
+               bins=[360, 123],
+               range=[[0, 360], [-30, 93]],
                weights=1. / np.cos(np.deg2rad(RV_T['TARGET_DEC'][cur_sel])),
                vmax=700)
     plt.gci().set_rasterized(True)
@@ -36,8 +36,15 @@ for survey, program in [('main', 'bright'), ('main', 'dark'),
     plt.xlabel(r'$\alpha$ [deg]')
     cnt += 1
     #plt.title(f'survey, program: {survey},{program}')
-    plt.text(300, 85, f'survey, program: {survey},{program}', color='white')
+    plt.text(220, 84, f'{survey},{program}', color='white')
     plt.xlim(360, 0)
+    for xx in 'xy':
+        plt.gca().tick_params(axis=xx,
+                              which='both',
+                              labelcolor='black',
+                              color='white')
+    for xx in plt.gca().spines.keys():
+        plt.gca().spines[xx].set_color("white")
     if cnt == 3:
         plt.colorbar()
 plt.tight_layout()

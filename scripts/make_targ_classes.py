@@ -58,6 +58,14 @@ for curt, bit in bitmasks:
     # plt.title(f'survey, program: {survey},{program}')
     plt.ylim(20.5, 15.31)
     plt.text(-.3, 16., f'{curt}\n bitmask {2**bit}', color='white')
+    for xx in 'xy':
+        plt.gca().tick_params(axis=xx,
+                              which='both',
+                              labelcolor='black',
+                              color='white')
+    for xx in plt.gca().spines.keys():
+        plt.gca().spines[xx].set_color("white")
+    plt.gca().tick_params(top=False, which='both')
     if cnt > 3:
         plt.xlabel('g-r [mag]')
         plt.xticks([0, 1, 2])

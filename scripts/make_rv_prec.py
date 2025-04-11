@@ -79,8 +79,16 @@ for i in range(2):
     # norm=maco.LogNorm()
 
     plt.xlabel('z [mag]')
-    plt.text(17, 1, '[Fe/H]=$%d$' % feh, color='white')
+    plt.text(17, 1.07, '[Fe/H]=$%d$' % feh, color='white')
     plt.xlim(15.5, 19.5)
+    for xx in 'xy':
+        plt.gca().tick_params(axis=xx,
+                              which='both',
+                              labelcolor='black',
+                              color='white')
+    for xx in plt.gca().spines.keys():
+        plt.gca().spines[xx].set_color("white")
+    plt.gca().tick_params(top=False, which='both')
 
     im.set_rasterized(True)
     if i == 0:
@@ -97,6 +105,6 @@ fig.colorbar(im, cax=cax)
 # cur_sel2 = cur_sel & betw(RV_T['FEH'], -2, -1.9)
 # plt.xlabel('z [mag]')
 plt.tight_layout()
-plt.subplots_adjust(wspace=0.03, left=.15, top=.99)
+plt.subplots_adjust(wspace=0.03, left=.15, top=.98, bottom=.15, right=.93)
 
 plt.savefig('plots/rv_prec.pdf')

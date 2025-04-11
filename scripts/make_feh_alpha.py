@@ -51,9 +51,16 @@ for cnt in range(2):
 
     plt.gci().set_rasterized(True)
     plt.xlabel('[Fe/H] ')
+    for xx in 'xy':
+        plt.gca().tick_params(axis=xx,
+                              which='both',
+                              labelcolor='black',
+                              color='white')
+    for xx in plt.gca().spines.keys():
+        plt.gca().spines[xx].set_color("white")
 
     # plt.title(['RVS', 'SP'][cnt])
-    plt.text(-2, 1.21, ['RVS', 'SP'][cnt], color='white')
+    plt.text(-2, 1.21 - .1, ['RVS', 'SP'][cnt], color='white')
     if cnt == 0:
         plt.ylabel(r'[$\alpha$/Fe]')
     else:
@@ -62,6 +69,6 @@ ax = plt.subplot(gs[2])
 plt.colorbar(im[-1], cax=ax)
 
 # plt.tight_layout()
-plt.subplots_adjust(wspace=0., hspace=0.01, top=.97, bottom=.16)
+plt.subplots_adjust(wspace=0., hspace=0.001, top=.97, bottom=.16)
 
 plt.savefig('plots/feh_alpha.pdf')

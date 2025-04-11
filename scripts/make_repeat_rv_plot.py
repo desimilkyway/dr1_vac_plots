@@ -6,7 +6,7 @@ import scipy.stats
 import matplotlib.pyplot as plt
 import numpy as np
 import plot_preamb as pp
-from config import main_file, data_path, external_path, rvexp_path
+from config import main_file, data_path, rvexp_path
 
 fname = data_path + '/' + main_file
 
@@ -15,7 +15,7 @@ def func(p, args):
     xerr, yerr = args
     err_calib = np.sqrt(p[0]**2 * xerr**2 + p[1]**2)
     ret = np.sum(np.abs(np.log10(yerr) - np.log10(err_calib)))
-    #print(ret, p)
+    # print(ret, p)
     return ret
 
 
@@ -166,15 +166,15 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
               SS1.statistic)
     A2, B2 = (10**(SS2.bin_edges[:-1] + .5 * np.diff(SS2.bin_edges)),
               SS2.statistic)
+    xres1[prog] = A1[xsub1], B1[xsub1]
     xres2[prog] = A2[xsub2], B2[xsub2]
-    xres1[prog] = A1[xsub2], B1[xsub2]
     plt.plot(A1[xsub1], B1[xsub1], '.', color='grey')
+    plt.plot(A2[xsub2], B2[xsub2], '.', color='black')
     plt.ylim(.5, 30)
     plt.xlim(.11, 30)
     plt.gca().set_yscale('log')
     plt.gca().set_xscale('log')
 
-    plt.plot(A2[xsub2], B2[xsub2], '.', color='black')
     if i == 1:
         plt.ylabel(r'$\frac{1}{\sqrt{2}}$ StdDev($V_1-V_2$) [km/s]')
     # else:
@@ -182,10 +182,10 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
     if i == 2:
         plt.xlabel(r'$\sqrt{\frac{\sigma_1^2+\sigma_2^2}{2}}$ [km/s]')
     plt.text(.2, 10, f'{survey},{prog}')
-    coeffs2 = fitter(*xres2[prog])
-    print(prog, coeffs2)
     coeffs1 = fitter(*xres1[prog])
-    print(prog, 'all', coeffs1)
+    print(prog, 'all', np.round(coeffs1, 2))
+    coeffs2 = fitter(*xres2[prog])
+    print(prog, '>1d', np.round(coeffs2, 2))
     floor_dict[prog] = np.round(coeffs2[-1], 1)
     floor = floor_dict[prog]
     # floor_dict = {'dark': 1.2, 'bright': .7, 'backup': 2}
@@ -218,7 +218,7 @@ for i, prog in enumerate(['dark', 'bright', 'backup']):
              scipy.stats.norm(0, 1).pdf(xgrid) * sel1.sum() * (xr[1] - xr[0]) /
              nbins,
              color='red',
-             label='${\mathcal N}(0,1)$')
+             label=r'${\mathcal N}(0,1)$')
     plt.text(.6, .7, f'{survey},{prog}', transform=plt.gca().transAxes)
 
     if i == 0:

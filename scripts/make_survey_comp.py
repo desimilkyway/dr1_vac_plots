@@ -4,7 +4,7 @@ import sqlutil_cache as sqlutil
 import matplotlib.pyplot as plt
 import plot_preamb as pp
 from matplotlib.colors import TABLEAU_COLORS
-from config import main_file, data_path, external_path
+from config import main_file, data_path
 
 fname = data_path + '/' + main_file
 
@@ -25,9 +25,10 @@ where x.original_ext_source_id =s.objid and
 s.scienceprimary=1 and
 s.specobjid=sp.specobjid and fehadop > -6 and fehadop <10 ;''')
 
-min_mag = 11
-max_mag = 21
+min_mag = 10
+max_mag = 22
 bins = (max_mag - min_mag) * 10
+shift = 1 / 7.
 kw = dict(histtype='step', range=[min_mag, max_mag], bins=bins)
 plt.figure(figsize=(3.37 * 2, 2.5))
 
@@ -37,7 +38,7 @@ for program in ['dark', 'backup', 'bright']:
     # sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
     #    T2['PRIMARY']) & (T2['SURVEY'] == 'main') & (T2['PROGRAM'] == program)
     ls = {'dark': '--', 'bright': None, 'backup': ':'}[program]
-    #if False:
+    # if False:
     # plt.hist(GT2['PHOT_G_MEAN_MAG'][sub2],
     #         color='lightgrey',
     #         label='DESI DR2',
@@ -51,9 +52,15 @@ for program in ['dark', 'backup', 'bright']:
         linestyle=ls,
         label='DESI DR1',
         **kw)
+    kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
 plt.hist(lam_t, color=colors[1], label='LAMOST LRS DR9', **kw)
+kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
 plt.hist(sdss_t, color=colors[2], label='SDSS DR14', **kw)
+kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
 plt.hist(gaia_t, color=colors[3], label='Gaia DR3 RVS', **kw)
+kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
+plt.xlim(11, 21)
+plt.ylim(10, 7e5)
 # plt.text(18, 3e5, 'DESI DR2', color='lightgrey')
 plt.text(12, 3e4, 'LAMOST DR9', color=colors[1], rotation=10)
 plt.text(14.5, 2e3, 'SDSS DR14', color=colors[2], rotation=20)
@@ -65,8 +72,6 @@ plt.xlabel('G [mag]')
 plt.gca().set_yscale('log')
 # plt.xlim(15.8, 20.5)
 plt.ylabel('N$_{stars}$/bin')
-plt.xlim(11, 21)
-plt.ylim(10, 7e5)
 # plt.legend()
 plt.tight_layout()
 plt.savefig('plots/survey_comparison.pdf')

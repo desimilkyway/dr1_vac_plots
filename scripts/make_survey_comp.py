@@ -29,10 +29,11 @@ min_mag = 10
 max_mag = 22
 bins = (max_mag - min_mag) * 10
 shift = 1 / 7.
-kw = dict(histtype='step', range=[min_mag, max_mag], bins=bins)
+kw = dict(histtype='stepfilled', range=[min_mag, max_mag], bins=bins)
 plt.figure(figsize=(3.37 * 2, 2.5))
+colors = list(TABLEAU_COLORS.values())
 
-for program in ['dark', 'backup', 'bright']:
+for program in ['backup','bright','dark']:
     sub = (T['RVS_WARN'] == 0) & (T['RR_SPECTYPE'] == 'STAR') & (
         T['PRIMARY']) & (T['SURVEY'] == 'main') & (T['PROGRAM'] == program)
     # sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
@@ -44,15 +45,17 @@ for program in ['dark', 'backup', 'bright']:
     #         label='DESI DR2',
     #         linestyle=ls,
     #         **kw)
-    colors = list(TABLEAU_COLORS.values())
+    from matplotlib.colors import to_rgba
     plt.hist(
         GT['PHOT_G_MEAN_MAG'][sub],
-        color='black',
+        edgecolor=('black'),
         #             linewidth=2,
         linestyle=ls,
         label='DESI DR1',
+        color=to_rgba('lightgrey', alpha=.4),
         **kw)
     kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
+kw['histtype'] = 'step'
 plt.hist(lam_t, color=colors[1], label='LAMOST LRS DR9', **kw)
 kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
 plt.hist(sdss_t, color=colors[2], label='SDSS DR14', **kw)

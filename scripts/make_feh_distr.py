@@ -39,8 +39,9 @@ plt.hist(RV_T['FEH'][cur_sel], label='RVS', **opt)
 cur_sel = cur_sel0 & sp_sel
 plt.hist(SP_T['FEH'][cur_sel], label='SP', **opt)
 
-plt.plot([-1.4, -1.4], [100, 3e3], linestyle=':', color='grey')
-plt.plot([-2.1, -2.1], [100, 3e3], linestyle=':', color='grey')
+plt.plot([-1.4, -1.4], [100, 3e3], linestyle='--', color='grey')
+plt.plot([-2.1, -2.1], [100, 3e3], linestyle='--', color='grey')
+plt.text(-1.6, 50, 'GSE', color='grey')
 plt.gca().set_yscale('log')
 plt.xlabel('[Fe/H]')
 plt.legend()

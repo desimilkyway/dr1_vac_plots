@@ -133,7 +133,7 @@ fig = plt.figure(figsize=(3.37 * 1, 3.37 * .9))
 xres2 = {}
 xres1 = {}
 floor_dict = {}
-for i, prog in enumerate(['dark', 'bright', 'backup']):
+for i, prog in enumerate(['bright', 'backup', 'dark']):
     sel1 = (PAIRS['program'] == prog) & (PAIRS['survey'] == survey) & (
         PAIRS['rvs_warn1'] == 0) & (PAIRS['rvs_warn2'] == 0)
     erange = [-1, 1.5]

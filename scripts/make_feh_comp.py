@@ -338,7 +338,8 @@ for x1, pipe in enumerate(['RVS', 'SP']):
             plt.plot(COMP['fe_h'][cur_sel], curfeh[cur_sel], '.')
             plt.xlim(-4, -.01)
             plt.ylim(-4, -.01)
-            plt.text(-3, -.5, 'SAGA')
+            if x1 == 0:
+                plt.text(-3, -.5, 'SAGA')
         plt.plot([-4, 1], [-4, 1], color='red', linestyle='--', dashes=(3, 10))
 
         plt.xlabel('[Fe/H]$_{survey}$ [dex]')

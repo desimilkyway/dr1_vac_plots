@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import plot_preamb as pp
 import scipy.optimize
 import scipy.stats
+import healpy
 from config import main_file, data_path, external_path
 
 fname = data_path + '/' + main_file
@@ -52,7 +53,6 @@ stat = S.statistic
 stat[SC.statistic < minval] = np.nan
 
 nside = 32
-import healpy
 
 hpx = healpy.ang2pix(nside,
                      RV_T['TARGET_RA'],
@@ -89,8 +89,6 @@ R = sky_plotter.hpx_show(
 R.set_rasterized(True)
 plt.colorbar(R, label=r'$\delta V_{rad}$ [km/s]', shrink=.8)
 
-#healpy.graticule()
-#plt.imshow(reproj_im, origin='lower', aspect='auto')
 if False:
     plt.imshow(stat.T,
                extent=list(xr) + list(yr),
@@ -99,10 +97,5 @@ if False:
                aspect='auto',
                vmax=25,
                vmin=-25)
-# plt.colorbar(label=r'$\delta V_{rad}$ [km/s]')
-# plt.xlim(360, 0)
-#plt.xlabel(r'$\alpha$ [deg]')
-#plt.ylabel(r'$\delta$ [deg]')
-#plt.tight_layout()
 plt.subplots_adjust(right=.999, left=0.04, top=.98)
 plt.savefig('plots/backup_delt.pdf')

@@ -409,7 +409,8 @@ for var_name in ['FEH', 'FEH_CALIB2']:
         'FEH_CALIB2': 'plots/feh_compar_delta_calibrated.pdf'
     }[var_name])
 
-if True:
+if False:
+    # disable 
     plt.clf()
     print('temporary validation plot')
     # this is internal validation

@@ -6,7 +6,7 @@ import sqlutilpy as sqlutil  # Make sure this is the correct import path for you
 from crossmatcher_cache import (_encode_for_hash, _hash_call, _save_npz,
                                 _load_npz, CACHE_DIR)
 
-CACHE_DIR = "cache"
+CACHE_DIR = "../query_cache/"
 
 
 def _hash_query(query, kwargs):

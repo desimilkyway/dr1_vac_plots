@@ -1,17 +1,42 @@
-import maglim_calculator as cc
 import matplotlib.pyplot as plt
 import plot_preamb as pp
 import numpy as np
+import hashlib
+import os
 
 pp.run()
+
+CACHE_DIR = '../query_cache/'
+
+
+def _hash_args(args, kwargs):
+    hasher = hashlib.sha256()
+    hasher.update((repr(args) + repr(kwargs)).encode("utf-8"))
+    return hasher.hexdigest()
+
+
+def get_maglims(frac, feh, nsamp):
+    args = (frac, )
+    kw = dict(feh=feh, nsamp=nsamp)
+    _hash = _hash_args(args, kw)
+    fname = CACHE_DIR + '/' + _hash + '.npz'
+    if os.path.exists(fname):
+        R = np.load(fname)
+        A, B = R['A'], R['B']
+    else:
+        import maglim_calculator as maglim
+        A, B = maglim.doit(*args, **kw)
+        np.savez(fname, A=A, B=B)
+    return A, B
+
 
 frac = 0.2  # completeness in desi DR1
 frac2 = 0.38  # in DESI DR2
 # frac = 0.2  # in dr1
 nsamp = 1e7
-A1, B1 = cc.doit(frac, feh=-2.5, nsamp=nsamp)
-A2, B2 = cc.doit(frac, feh=-2, nsamp=nsamp)
-A3, B3 = cc.doit(frac, feh=-1.5, nsamp=nsamp)
+A1, B1 = get_maglims(frac, -2.5, nsamp)
+A2, B2 = get_maglims(frac, -2., nsamp)
+A3, B3 = get_maglims(frac, -1.5, nsamp)
 plt.figure(figsize=(3.37, 2.5))
 shift = 2.5 * np.log(frac2 / frac)  # dr1 vs dr2
 plt.plot(A1, B1, label='[Fe/H]=$-2.5$', color='blue')

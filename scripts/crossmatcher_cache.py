@@ -4,7 +4,7 @@ import os
 import hashlib
 import numpy as np
 
-CACHE_DIR = "cache"
+CACHE_DIR = "../query_cache/"
 
 
 def _encode_for_hash(item):

@@ -4,9 +4,10 @@ import duckdb
 import sqlutilpy as sqlutil
 import matplotlib.pyplot as plt
 import plot_preamb as pp
+from config import rvexp_path
 
 pp.run()
-fs = glob.glob('../../rv_variability/rvtabs_iron/*exp*fits')
+fs = glob.glob(rvexp_path + '/rv*exp*fits')
 tabs = []
 for f in fs:
     T = atpy.Table().read(f, 'RVTAB', mask_invalid=False)

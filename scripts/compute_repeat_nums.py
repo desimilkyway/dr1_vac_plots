@@ -2,12 +2,12 @@ import glob
 import astropy.table as atpy
 import duckdb
 import sqlutilpy as sqlutil
-import scipy.stats
 import numpy as np
 import plot_preamb as pp
+from config import rvexp_path
 
 pp.run()
-fs = glob.glob('../../rv_variability/rvtabs_iron/*exp*fits')
+fs = glob.glob(rvexp_path + '/*exp*fits')
 tabs = []
 for f in fs:
     T = atpy.Table().read(f, 'RVTAB', mask_invalid=False)
@@ -38,10 +38,10 @@ conn1.register('repeats0', tab_p)
 conn1.execute('create table repeats as select * from repeats0')
 surv, prog, cnt = sqlutil.get('''
 with x as (
-select source_id, count(*) as cnt,survey, program from repeats as r 
-where source_id>0 
+select source_id, count(*) as cnt,survey, program from repeats as r
+where source_id>0
     group by SOURCE_ID, survey, program)
-select survey, program ,count(*) from x where cnt>1 group by survey, program 
+select survey, program ,count(*) from x where cnt>1 group by survey, program
 ''',
                               conn=conn1,
                               driver='duckdb')

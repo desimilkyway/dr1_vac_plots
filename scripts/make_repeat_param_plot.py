@@ -4,10 +4,9 @@ import duckdb
 import sqlutilpy as sqlutil
 import scipy.stats
 import matplotlib.pyplot as plt
-from idlplotInd import plot, oplot
 import numpy as np
 import plot_preamb as pp
-from config import main_file, data_path, external_path, rvexp_path
+from config import main_file, data_path, rvexp_path
 
 fname = data_path + '/' + main_file
 

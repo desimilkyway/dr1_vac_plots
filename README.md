@@ -11,12 +11,15 @@ the DESI data
 
 
 Required python modules :
- numpy scipy
+ numpy
+ scipy
  matplotlib
  astropy 
  dynesty
  duckdb
  sqlutilpy
+ healpy
+ pandas
 
 If on nersc you need this module
 texlive/2024

@@ -26,7 +26,6 @@ def betw(x, x1, x2):
 
 
 ra, dec = RV_T['TARGET_RA'], RV_T['TARGET_DEC']
-HOST = open('WSDB', 'r').read()
 
 plt.clf()
 fig = plt.figure(figsize=(3.37 * 2., 3.37 * 1))

@@ -17,7 +17,6 @@ Required python modules :
  astropy 
  dynesty
  duckdb
- sqlutilpy
  healpy
  pandas
 

@@ -168,33 +168,38 @@ for i, prog in enumerate(['bright', 'backup', 'dark']):
               SS2.statistic)
     xres1[prog] = A1[xsub1], B1[xsub1]
     xres2[prog] = A2[xsub2], B2[xsub2]
-    plt.plot(A1[xsub1], B1[xsub1], '.', color='grey')
-    plt.plot(A2[xsub2], B2[xsub2], '.', color='black')
+    lab1, lab2 = None, None
+    if prog == 'bright':
+        lab2 = r'Data, |$\Delta$ t$_{obs}$|>1 d'
+        lab1 = 'Data, all'
+    plt.plot(A1[xsub1], B1[xsub1], '.', color='grey', label=lab1)
+    plt.plot(A2[xsub2], B2[xsub2], '.', color='black', label=lab2)
     plt.ylim(.5, 30)
-    plt.xlim(.11, 30)
+    plt.xlim(.05, 40)
     plt.gca().set_yscale('log')
     plt.gca().set_xscale('log')
 
     if i == 1:
-        plt.ylabel(r'$\frac{1}{\sqrt{2}}$ StdDev($V_1-V_2$) [km/s]')
+        plt.ylabel(r'$\frac{1}{\sqrt{2}}$ StdDev($V_{i}-V_{j}$) [km/s]')
     # else:
     # plt.gca().yaxis.set_major_formatter(plt.NullFormatter())
     if i == 2:
-        plt.xlabel(r'$\sqrt{\frac{\sigma_1^2+\sigma_2^2}{2}}$ [km/s]')
-    plt.text(.2, 10, f'{survey},{prog}')
+        plt.xlabel(r'$\sqrt{\frac{\sigma_{i}^2+\sigma_{j}^2}{2}}$ [km/s]')
+    # plt.text(.2, 10, f'{survey},{prog}')
+    plt.text(1.2, 15, f'{survey},{prog}')
     coeffs1 = fitter(*xres1[prog])
     print(prog, 'all', np.round(coeffs1, 2))
     coeffs2 = fitter(*xres2[prog])
     print(prog, '>1d', np.round(coeffs2, 2))
     floor_dict[prog] = np.round(coeffs2[-1], 1)
     floor = floor_dict[prog]
-    # floor_dict = {'dark': 1.2, 'bright': .7, 'backup': 2}
     plt.plot(10**xgrid,
              np.sqrt(10**(2 * xgrid) + floor**2),
-             label='floor %.1f km/s' % floor,
+             label='Model, floor %.1f km/s' % floor,
              linewidth=1,
              color='black')
-    plt.legend(loc='lower right')
+    plt.gca().tick_params(top=False, which='both')
+    plt.legend(loc='upper left', handlelength=1)
 plt.tight_layout()
 plt.subplots_adjust(wspace=0, hspace=0)
 plt.savefig('plots/repeats_accuracy.pdf')
@@ -219,7 +224,7 @@ for i, prog in enumerate(['bright', 'backup', 'dark']):
              nbins,
              color='red',
              label=r'${\mathcal N}(0,1)$')
-    plt.text(.6, .7, f'{survey},{prog}', transform=plt.gca().transAxes)
+    plt.text(.7, .9, f'{survey},{prog}', transform=plt.gca().transAxes)
 
     if i == 0:
         plt.legend()
@@ -228,6 +233,7 @@ for i, prog in enumerate(['bright', 'backup', 'dark']):
         plt.gca().xaxis.set_major_formatter(plt.NullFormatter())
     if i == 2:
         plt.xlabel(r'$\delta_{RV}/\sigma_{RV,calib}$')
+    plt.gca().tick_params(top=False, which='both')
     # plt.legend()
 plt.tight_layout()
 plt.subplots_adjust(wspace=0, hspace=0)

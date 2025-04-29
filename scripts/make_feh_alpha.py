@@ -2,8 +2,10 @@ import astropy.table as atpy
 import matplotlib.pyplot as plt
 import matplotlib.colors as maco
 import matplotlib.gridspec as gridspec
+import matplotlib.patches as mapa
 import plot_preamb as pp
-from config import main_file, data_path, external_path
+import numpy as np
+from config import main_file, data_path
 
 fname = data_path + '/' + main_file
 
@@ -46,14 +48,26 @@ for xcnt in range(2):
         cur_sel = cur_sel & betw(T['TEFF'], 4500, 7000)
         # plt.subplot(1, 2, cnt + 1)
         plt.subplot(gs[xcnt, cnt])
-        rr = {0: [[-5, 1], [-.5, 1.3]], 1: [[-2, .5], [-.2, .7]]}[xcnt]
+        range_dict = {0: [[-5, 1], [-.5, 1.3]], 1: [[-2, .5], [-.2, .7]]}
+        rr = range_dict[xcnt]
+        if xcnt == 0:
+            rr1 = np.array(range_dict[1])
         vmax = {0: 10000, 1: 3000}[xcnt]
         im = plt.hist2d((T['FEH'][cur_sel]),
                         T['ALPHAFE'][cur_sel],
                         range=rr,
                         bins=[100, 100],
                         norm=maco.PowerNorm(gamma=.5, vmax=vmax))
+        if xcnt == 0:
 
+            rect = mapa.Rectangle((rr1[0, 0], rr1[1, 0]),
+                                  rr1[0, 1] - rr1[0, 0],
+                                  rr1[1, 1] - rr1[1, 0],
+                                  linewidth=1,
+                                  edgecolor='grey',
+                                  linestyle=':',
+                                  facecolor='none')
+            plt.gca().add_patch(rect)
         plt.gci().set_rasterized(True)
         if xcnt == 1:
             plt.xlabel('[Fe/H] ')

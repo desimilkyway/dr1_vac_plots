@@ -35,7 +35,9 @@ plt.figure(figsize=(3.37 * 2, 2.5))
 colors = list(TABLEAU_COLORS.values())
 
 cnt = 0
-for program in ['backup', 'bright', 'dark']:
+progs = ['dark', 'bright', 'backup']
+color_map = {'dark': colors[0], 'bright': colors[1], 'backup': colors[2]}
+for program in progs:
     sub = (T['RVS_WARN'] == 0) & (T['RR_SPECTYPE'] == 'STAR') & (
         T['PRIMARY']) & (T['SURVEY'] == 'main') & (T['PROGRAM'] == program)
     # sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
@@ -48,14 +50,18 @@ for program in ['backup', 'bright', 'dark']:
     #         **kw)
     plt.hist(
         GT['PHOT_G_MEAN_MAG'][sub],
-        edgecolor=colors[cnt],  # ('black'),
+        edgecolor=color_map[program],  # ('black'),
         #             linewidth=2,
         # linestyle=ls,
-        label='DESI DR1',
+        #label='DESI DR1',
         color=to_rgba(colors[cnt], alpha=.1),
         **kw)
     kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
     cnt += 1
+
+plt.text(13, 3000, 'DESI DR1 backup', rotation=10, color=color_map['backup'])
+plt.text(18, 1.3e5, 'DESI DR1 bright', color=color_map['bright'])
+plt.text(16.5, 2000, 'DESI DR1 dark', rotation=7, color=color_map['dark'])
 
 kw['histtype'] = 'step'
 ls = {'LAMOST': '--', 'Gaia': None, 'SDSS': ':'}
@@ -79,9 +85,6 @@ plt.ylim(10, 2e6)
 plt.text(12, 3e4, 'LAMOST DR9', color='black', rotation=10)
 plt.text(14.5, 2e3, 'SDSS DR14', color='black', rotation=20)
 plt.text(12, 1.5e5, 'Gaia DR3 RVS', color='black', rotation=10)
-plt.text(13, 3000, 'DESI DR1 backup', rotation=10, color=colors[0])
-plt.text(18, 1.3e5, 'DESI DR1 bright', color=colors[1])
-plt.text(16.5, 2000, 'DESI DR1 dark', rotation=7, color=colors[2])
 plt.xlabel('G [mag]')
 plt.gca().set_yscale('log')
 # plt.xlim(15.8, 20.5)

@@ -105,6 +105,8 @@ if __name__ == '__main__':
                             (poo.apply_async(fit_scatter.get_scatter,
                                              (feh[sub2], feh_err[sub2])),
                              feh[sub2], feh_err[sub2]))
+                    else:
+                        print(k, v)
 
         pdf_file = PdfPages('tmp_plots/multipage_plots.pdf')
         for tp, it in zip(to_print, queue):

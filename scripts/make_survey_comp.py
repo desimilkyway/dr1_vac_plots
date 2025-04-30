@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import plot_preamb as pp
 from matplotlib.colors import TABLEAU_COLORS
 from config import main_file, data_path
+from matplotlib.colors import to_rgba
 
 fname = data_path + '/' + main_file
 
@@ -33,44 +34,54 @@ kw = dict(histtype='stepfilled', range=[min_mag, max_mag], bins=bins)
 plt.figure(figsize=(3.37 * 2, 2.5))
 colors = list(TABLEAU_COLORS.values())
 
-for program in ['backup','bright','dark']:
+cnt = 0
+for program in ['backup', 'bright', 'dark']:
     sub = (T['RVS_WARN'] == 0) & (T['RR_SPECTYPE'] == 'STAR') & (
         T['PRIMARY']) & (T['SURVEY'] == 'main') & (T['PROGRAM'] == program)
     # sub2 = (T2['RVS_WARN'] == 0) & (T2['RR_SPECTYPE'] == 'STAR') & (
     #    T2['PRIMARY']) & (T2['SURVEY'] == 'main') & (T2['PROGRAM'] == program)
-    ls = {'dark': '--', 'bright': None, 'backup': ':'}[program]
     # if False:
     # plt.hist(GT2['PHOT_G_MEAN_MAG'][sub2],
     #         color='lightgrey',
     #         label='DESI DR2',
     #         linestyle=ls,
     #         **kw)
-    from matplotlib.colors import to_rgba
     plt.hist(
         GT['PHOT_G_MEAN_MAG'][sub],
-        edgecolor=('black'),
+        edgecolor=colors[cnt],  # ('black'),
         #             linewidth=2,
-        linestyle=ls,
+        # linestyle=ls,
         label='DESI DR1',
-        color=to_rgba('lightgrey', alpha=.4),
+        color=to_rgba(colors[cnt], alpha=.1),
         **kw)
     kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
+    cnt += 1
+
 kw['histtype'] = 'step'
-plt.hist(lam_t, color=colors[1], label='LAMOST LRS DR9', **kw)
+ls = {'LAMOST': '--', 'Gaia': None, 'SDSS': ':'}
+plt.hist(lam_t,
+         color='black',
+         label='LAMOST LRS DR9',
+         linestyle=ls['LAMOST'],
+         **kw)
 kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
-plt.hist(sdss_t, color=colors[2], label='SDSS DR14', **kw)
+plt.hist(sdss_t, color='black', label='SDSS DR14', linestyle=ls['SDSS'], **kw)
 kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
-plt.hist(gaia_t, color=colors[3], label='Gaia DR3 RVS', **kw)
+plt.hist(gaia_t,
+         color='black',
+         label='Gaia DR3 RVS',
+         linestyle=ls['Gaia'],
+         **kw)
 kw['range'] = [kw['range'][0] + shift, kw['range'][1] + shift]
 plt.xlim(11, 21)
-plt.ylim(10, 7e5)
+plt.ylim(10, 2e6)
 # plt.text(18, 3e5, 'DESI DR2', color='lightgrey')
-plt.text(12, 3e4, 'LAMOST DR9', color=colors[1], rotation=10)
-plt.text(14.5, 2e3, 'SDSS DR14', color=colors[2], rotation=20)
-plt.text(12, 1.5e5, 'Gaia DR3 RVS', color=colors[3], rotation=10)
-plt.text(18, 1.3e5, 'DESI DR1 bright')
-plt.text(13, 3000, 'DESI DR1 backup', rotation=10)
-plt.text(16.5, 2000, 'DESI DR1 dark', rotation=7)
+plt.text(12, 3e4, 'LAMOST DR9', color='black', rotation=10)
+plt.text(14.5, 2e3, 'SDSS DR14', color='black', rotation=20)
+plt.text(12, 1.5e5, 'Gaia DR3 RVS', color='black', rotation=10)
+plt.text(13, 3000, 'DESI DR1 backup', rotation=10, color=colors[0])
+plt.text(18, 1.3e5, 'DESI DR1 bright', color=colors[1])
+plt.text(16.5, 2000, 'DESI DR1 dark', rotation=7, color=colors[2])
 plt.xlabel('G [mag]')
 plt.gca().set_yscale('log')
 # plt.xlim(15.8, 20.5)

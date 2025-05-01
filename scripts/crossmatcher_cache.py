@@ -3,8 +3,9 @@
 import os
 import hashlib
 import numpy as np
+from config import caxsche_dir
 
-CACHE_DIR = "../query_cache/"
+CACHE_DIR = cache_dir
 
 
 def _encode_for_hash(item):

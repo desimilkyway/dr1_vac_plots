@@ -12,3 +12,5 @@ rvexp_path = '../../rv_variability/rvtabs_iron/'
 
 # main VAC file
 main_file = 'mwsall-pix-iron.fits'
+
+cache_dir = '../query_cache/'

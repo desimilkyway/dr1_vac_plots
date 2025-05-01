@@ -1,12 +1,12 @@
 import os
 import hashlib
 import numpy as np
-import sqlutilpy as sqlutil  # Make sure this is the correct import path for your app
+# Make sure this is the correct import path for your app
 # Adjust this import path to match your project structure
-from crossmatcher_cache import (_encode_for_hash, _hash_call, _save_npz,
-                                _load_npz, CACHE_DIR)
+from crossmatcher_cache import (_hash_call, _save_npz, _load_npz)
+from config import cache_dir
 
-CACHE_DIR = "../query_cache/"
+CACHE_DIR = cache_dir
 
 
 def _hash_query(query, kwargs):
@@ -34,9 +34,10 @@ def _hash_query(query, kwargs):
 
 def get(query, **kwargs):
     """
-    A caching wrapper around sqlutil.get(). 
+    A caching wrapper around sqlutil.get().
 
-    - If kwargs['asDict'] is True, we expect a dictionary of {colname -> np.array}.
+    - If kwargs['asDict'] is True, we expect a dictionary of
+      {colname -> np.array}.
     - Otherwise, we expect a tuple of np arrays.
 
     The results are stored in a .npz file in `cache/<hash>.npz`.
@@ -72,6 +73,7 @@ def get(query, **kwargs):
         return data
 
     # Otherwise, run the query via sqlutil
+    import sqlutilpy as sqlutil
     result = sqlutil.get(query, **kwargs)
 
     # Figure out whether the user requested a dictionary or a tuple
@@ -106,13 +108,14 @@ def get(query, **kwargs):
 def local_join(query, table_name, arr_tuple, colnames_tuple, **kwargs):
     """
     A caching wrapper around sqlutil.local_join(...).
-    
+
     Usage example:
         CA_dr3_id, = sqlutil_cache.local_join(
             '''
             WITH x AS (
               SELECT rid, dr3_source_id,
-                     ROW_NUMBER() OVER (PARTITION BY rid ORDER BY angular_distance ASC)
+                     ROW_NUMBER() OVER (PARTITION BY rid ORDER BY
+                    angular_distance ASC)
               FROM gaia_edr3.dr2_neighbourhood AS g, m
               WHERE m.source_id = g.dr2_source_id
             )
@@ -126,7 +129,8 @@ def local_join(query, table_name, arr_tuple, colnames_tuple, **kwargs):
             ('rid','source_id')
         )
 
-    This will return a tuple of numpy arrays, just as the real sqlutil.local_join does.
+    This will return a tuple of numpy arrays, just as the real
+    # sqlutil.local_join does.
     The result is cached into cache/<hash>.npz if not already present.
     """
 
@@ -134,7 +138,8 @@ def local_join(query, table_name, arr_tuple, colnames_tuple, **kwargs):
     if not os.path.exists(CACHE_DIR):
         os.makedirs(CACHE_DIR)
 
-    # Build a unique hash based on all arguments: query, table, arrays, colnames, and kwargs
+    # Build a unique hash based on all arguments: query, table, arrays,
+    # colnames, and kwargs
     call_hash = _hash_call("local_join", query, table_name, arr_tuple,
                            colnames_tuple, **kwargs)
     cache_file = os.path.join(CACHE_DIR, f"{call_hash}.npz")
@@ -144,10 +149,12 @@ def local_join(query, table_name, arr_tuple, colnames_tuple, **kwargs):
         return _load_npz(cache_file)
 
     # Otherwise, run the actual sqlutil.local_join
+    import sqlutilpy as sqlutil
     result = sqlutil.local_join(query, table_name, arr_tuple, colnames_tuple,
                                 **kwargs)
 
-    # local_join typically returns a tuple of arrays, so we store as a "tuple" (as_dict=False)
+    # local_join typically returns a tuple of arrays, so we store as a "tuple"
+    # (as_dict=False)
     _save_npz(cache_file, result, as_dict=False)
 
     return result

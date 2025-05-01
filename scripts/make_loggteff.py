@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as maco
 import plot_preamb as pp
-from config import main_file, data_path, external_path
+from config import main_file, data_path
 
 fname = data_path + '/' + main_file
 
@@ -37,18 +37,31 @@ for cnt in range(2):
                T['LOGG'][cur_sel],
                range=[[3.45, 4.2], [-0.5, 6]],
                bins=[100, 100],
-               norm=maco.LogNorm())
+               norm=maco.PowerNorm(gamma=0.25))
 
     plt.gci().set_rasterized(True)
     plt.xlim(4.19, 3.45)
     plt.ylim(6, -0.5)
-    plt.xlabel('$\log_{10}$ T$_{eff}$ ')
+    plt.xlabel(r'$\log_{10}$ T$_{eff}$ ')
 
-    plt.text(4, 0, ['RVS', 'SP'][cnt])
+    plt.annotate(['RVS', 'SP'][cnt], (.5, .95),
+                 xycoords='axes fraction',
+                 color='white',
+                 horizontalalignment='center')
+    for xx in 'xy':
+        plt.gca().tick_params(axis=xx,
+                              which='both',
+                              labelcolor='black',
+                              color='white')
+    for xx in plt.gca().spines.keys():
+        plt.gca().spines[xx].set_color("white")
+
     if cnt == 0:
-        plt.ylabel('$\log$ g')
+        plt.ylabel(r'$\log$ g')
     else:
         plt.gca().yaxis.set_major_formatter(plt.NullFormatter())
+    plt.gca().tick_params(top=False, which='both')
+
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.03, hspace=0.01, top=.99)
 

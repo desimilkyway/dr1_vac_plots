@@ -82,7 +82,11 @@ for xcnt in range(2):
 
         # plt.title(['RVS', 'SP'][cnt])
         if xcnt == 0:
-            plt.text(-2, 1.21 - .1, ['RVS', 'SP'][cnt], color='white')
+            plt.annotate(['RVS', 'SP'][cnt], (.5, .9),
+                         color='white',
+                         xycoords='axes fraction',
+                         horizontalalignment='center')
+
         if cnt == 0:
             plt.ylabel(r'[$\alpha$/Fe]')
         else:

@@ -330,6 +330,7 @@ for x1, pipe in enumerate(['RVS', 'SP']):
                                       color='white')
             for xx in plt.gca().spines.keys():
                 plt.gca().spines[xx].set_color("white")
+            plt.gca().tick_params(top=False, which='both')
             plt.ylim(-2.49, .6)
             plt.gci().set_rasterized(True)
             if x1 == 0:
@@ -346,9 +347,10 @@ for x1, pipe in enumerate(['RVS', 'SP']):
 
         # plt.title(titl)
         if x2 == 0:
-            plt.annotate(titl, (0.5, .9),
+            plt.annotate(titl, (0.5, .93),
                          xycoords='axes fraction',
-                         color='white')
+                         color='white',
+                         horizontalalignment='center')
         if x1 == 0:
             plt.ylabel(r'[Fe/H]$_{DESI}$ [dex]')
         else:
@@ -392,13 +394,16 @@ for var_name in ['FEH', 'FEH_CALIB2']:
                          (.8, .8 - .3 * i),
                          color=list(TABLEAU_COLORS.values())[i],
                          xycoords='axes fraction')
-        plt.annotate(tit, (.5, .86), xycoords='axes fraction')
+        plt.annotate(tit, (.5, .86),
+                     xycoords='axes fraction',
+                     horizontalalignment='center')
         postfix = {'FEH': '', 'FEH_CALIB2': r'$_{\rm calibrated}$'}[var_name]
         if cnt == ncnt - 1:
             plt.xlabel(r'$\delta$ [Fe/H]' + postfix + ' [dex]')
         else:
             plt.gca().xaxis.set_major_formatter(plt.NullFormatter())
         plt.ylim(.1, plt.ylim()[1] * 1.15)
+        plt.gca().tick_params(top=False, which='both')
 
         if cnt == 0:
             plt.legend()
@@ -410,7 +415,7 @@ for var_name in ['FEH', 'FEH_CALIB2']:
     }[var_name])
 
 if False:
-    # disable 
+    # disable
     plt.clf()
     print('temporary validation plot')
     # this is internal validation

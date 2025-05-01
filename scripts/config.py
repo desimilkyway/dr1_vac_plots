@@ -8,7 +8,7 @@ external_path = '../external/'
 
 # PATH to the folder with the rvexp fits files for repeated
 # observations
-rvexp_path = '../../rv_variability/rvtabs_iron/'
+rvexp_path = '../data/single_epoch/'
 
 # main VAC file
 main_file = 'mwsall-pix-iron.fits'

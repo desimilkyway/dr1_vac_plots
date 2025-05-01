@@ -3,10 +3,10 @@ import plot_preamb as pp
 import numpy as np
 import hashlib
 import os
+import h5py
+from config import cache_dir as CACHE_DIR
 
 pp.run()
-
-CACHE_DIR = '../query_cache/'
 
 
 def _hash_args(args, kwargs):
@@ -19,14 +19,15 @@ def get_maglims(frac, feh, nsamp):
     args = (frac, )
     kw = dict(feh=feh, nsamp=nsamp)
     _hash = _hash_args(args, kw)
-    fname = CACHE_DIR + '/' + _hash + '.npz'
-    if os.path.exists(fname):
-        R = np.load(fname)
-        A, B = R['A'], R['B']
-    else:
+    fname = CACHE_DIR + '/' + _hash + '.hdf5'
+    if not os.path.exists(fname):
         import maglim_calculator as maglim
         A, B = maglim.doit(*args, **kw)
-        np.savez(fname, A=A, B=B)
+        with h5py.File(fname, 'w') as R:
+            R.create_dataset('A', data=A)
+            R.create_dataset('B', data=B)
+    with h5py.File(fname, 'r') as R:
+        A, B = np.array(R['A']), np.array(R['B'])
     return A, B
 
 

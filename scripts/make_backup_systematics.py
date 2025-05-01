@@ -5,7 +5,8 @@ import plot_preamb as pp
 import scipy.optimize
 import scipy.stats
 import healpy
-from config import main_file, data_path, external_path
+from config import main_file, data_path
+import sky_plotter
 
 fname = data_path + '/' + main_file
 
@@ -75,7 +76,6 @@ stat[SC.statistic < minval] = np.nan
 
 print('Total', np.isfinite(stat).sum())
 print('<20', (np.abs(stat) < 20).sum())
-import sky_plotter
 
 R = sky_plotter.hpx_show(
     stat,

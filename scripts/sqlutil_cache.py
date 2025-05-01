@@ -1,12 +1,9 @@
 import os
 import hashlib
-import numpy as np
 # Make sure this is the correct import path for your app
 # Adjust this import path to match your project structure
-from crossmatcher_cache import (_hash_call, _save_npz, _load_npz)
-from config import cache_dir
-
-CACHE_DIR = cache_dir
+from crossmatcher_cache import (_hash_call, _save_hdf5, _load_hdf5)
+from config import cache_dir as CACHE_DIR
 
 
 def _hash_query(query, kwargs):
@@ -40,7 +37,7 @@ def get(query, **kwargs):
       {colname -> np.array}.
     - Otherwise, we expect a tuple of np arrays.
 
-    The results are stored in a .npz file in `cache/<hash>.npz`.
+    The results are stored in a .hdf5 file in `cache/<hash>.hdf5`.
     If that file already exists, the data are loaded from it
     instead of running the query.
     """
@@ -50,25 +47,11 @@ def get(query, **kwargs):
 
     # Create a hash from the query string plus relevant kwargs
     query_hash = _hash_query(query, kwargs)
-    cache_file = os.path.join(CACHE_DIR, f"{query_hash}.npz")
+    cache_file = os.path.join(CACHE_DIR, f"{query_hash}.hdf5")
 
     # If a cached file exists, try to load it
     if os.path.isfile(cache_file):
-        loaded = np.load(cache_file, allow_pickle=False)
-
-        # Check if the data were written as a dictionary or a tuple
-        is_dict = bool(loaded["IS_DICT"][0])  # 1 => dict, 0 => tuple
-        if is_dict:
-            # Reconstruct dictionary
-            data = {}
-            for k in loaded.files:
-                if k == "IS_DICT" or k == "NUM_ARRAYS":
-                    continue
-                data[k] = loaded[k]
-        else:
-            # Reconstruct tuple
-            num_arrays = loaded["NUM_ARRAYS"][0]
-            data = tuple(loaded[f"arr_{i}"] for i in range(num_arrays))
+        data = _load_hdf5(cache_file)
 
         return data
 
@@ -79,29 +62,8 @@ def get(query, **kwargs):
     # Figure out whether the user requested a dictionary or a tuple
     as_dict = bool(kwargs.get("asDict", False))
 
-    # Save data to .npz for future calls
-    if as_dict:
-        # Expecting result to be {colname -> np.array}
-        arrays = {}
-        arrays["IS_DICT"] = np.array([1], dtype=np.int8)
-
-        # Each key in the dictionary becomes an array in the .npz
-        for k, v in result.items():
-            arrays[k] = v
-
-        np.savez(cache_file, **arrays)
-    else:
-        # Expecting a tuple of arrays
-        arrays = {}
-        arrays["IS_DICT"] = np.array([0], dtype=np.int8)
-        arrays["NUM_ARRAYS"] = np.array([len(result)], dtype=np.int32)
-
-        # Store each array with a known name
-        for i, arr in enumerate(result):
-            arrays[f"arr_{i}"] = arr
-
-        np.savez(cache_file, **arrays)
-
+    # Save data to .hdf5 for future calls
+    _save_hdf5(cache_file, result, as_dict=as_dict)
     return result
 
 
@@ -131,7 +93,7 @@ def local_join(query, table_name, arr_tuple, colnames_tuple, **kwargs):
 
     This will return a tuple of numpy arrays, just as the real
     # sqlutil.local_join does.
-    The result is cached into cache/<hash>.npz if not already present.
+    The result is cached into cache/<hash>.hdf5 if not already present.
     """
 
     # Ensure our cache folder exists
@@ -142,11 +104,11 @@ def local_join(query, table_name, arr_tuple, colnames_tuple, **kwargs):
     # colnames, and kwargs
     call_hash = _hash_call("local_join", query, table_name, arr_tuple,
                            colnames_tuple, **kwargs)
-    cache_file = os.path.join(CACHE_DIR, f"{call_hash}.npz")
+    cache_file = os.path.join(CACHE_DIR, f"{call_hash}.hdf5")
 
     # If we already have a cached result, load and return
     if os.path.isfile(cache_file):
-        return _load_npz(cache_file)
+        return _load_hdf5(cache_file)
 
     # Otherwise, run the actual sqlutil.local_join
     import sqlutilpy as sqlutil
@@ -155,6 +117,6 @@ def local_join(query, table_name, arr_tuple, colnames_tuple, **kwargs):
 
     # local_join typically returns a tuple of arrays, so we store as a "tuple"
     # (as_dict=False)
-    _save_npz(cache_file, result, as_dict=False)
+    _save_hdf5(cache_file, result, as_dict=False)
 
     return result

@@ -3,6 +3,7 @@
 import os
 import hashlib
 import numpy as np
+import h5py
 from config import cache_dir
 
 CACHE_DIR = cache_dir
@@ -55,56 +56,48 @@ def _hash_call(method_name, *args, **kwargs):
     return hasher.hexdigest()
 
 
-def _save_npz(filename, result, as_dict):
+def _save_hdf5(filename, result, as_dict):
     """
-    Save 'result' to an .npz file.
+    Save 'result' to an .hdf5 file.
+
     If as_dict=True, result is a dict {colName -> np.array}.
     Otherwise result is a tuple of arrays.
     """
-    if as_dict:
-        # Expecting a dictionary of {colname -> np.array}
-        arrays = {}
-        arrays["IS_DICT"] = np.array([1], dtype=np.int8)
-
-        # Each key in the dictionary becomes an array in the .npz
-        for k, v in result.items():
-            arrays[k] = v
-
-        np.savez(filename, **arrays)
-    else:
-        # Expecting a tuple of arrays
-        arrays = {}
-        arrays["IS_DICT"] = np.array([0], dtype=np.int8)
-        arrays["NUM_ARRAYS"] = np.array([len(result)], dtype=np.int32)
-
-        # Store each array with a known name
-        for i, arr in enumerate(result):
-            arrays[f"arr_{i}"] = arr
-
-        np.savez(filename, **arrays)
+    with h5py.File(filename, 'w') as f:
+        if as_dict:
+            # Expecting a dictionary of {colname -> np.array}
+            f.attrs['IS_DICT'] = np.int8(1)
+            for k, v in result.items():
+                f.create_dataset(k, data=v)
+        else:
+            # Expecting a tuple of arrays
+            f.attrs['IS_DICT'] = np.int8(0)
+            f.attrs['NUM_ARRAYS'] = np.int32(len(result))
+            # Store each array with a known name
+            for i, arr in enumerate(result):
+                f.create_dataset(f"arr_{i}", data=arr)
 
 
-def _load_npz(filename):
+def _load_hdf5(filename):
     """
-    Load from an .npz file created by _save_npz.
-    Return either a dict or tuple depending on the 'IS_DICT' flag.
+    Load from an .hdf5 file created by _save_hdf5.
+
+    Return either a dict or tuple depending on the 'IS_DICT' attribute.
     """
-    loaded = np.load(filename, allow_pickle=False)
-    is_dict = bool(loaded["IS_DICT"][0])  # 1 => dict, 0 => tuple
+    with h5py.File(filename, 'r') as f:
+        is_dict = bool(f.attrs['IS_DICT'])  # 1 => dict, 0 => tuple
 
-    if is_dict:
-        # Reconstruct dictionary
-        data = {}
-        for k in loaded.files:
-            if k in ("IS_DICT", "NUM_ARRAYS"):
-                continue
-            data[k] = loaded[k]
-    else:
-        # Reconstruct tuple
-        num_arrays = loaded["NUM_ARRAYS"][0]
-        data = tuple(loaded[f"arr_{i}"] for i in range(num_arrays))
+        if is_dict:
+            # Reconstruct dictionary
+            data = {}
+            for k in f.keys():
+                data[k] = np.array(f[k])
+        else:
+            # Reconstruct tuple
+            num_arrays = f.attrs['NUM_ARRAYS']
+            data = tuple(np.array(f[f"arr_{i}"]) for i in range(num_arrays))
 
-    return data
+        return data
 
 
 def doit_by_key(table, key_values, columns, **kwargs):
@@ -131,11 +124,11 @@ def doit_by_key(table, key_values, columns, **kwargs):
 
     # Build a unique hash for this call
     call_hash = _hash_call("doit_by_key", table, key_values, columns, **kwargs)
-    cache_file = os.path.join(CACHE_DIR, f"{call_hash}.npz")
+    cache_file = os.path.join(CACHE_DIR, f"{call_hash}.hdf5")
 
     # If it exists, load from cache
     if os.path.isfile(cache_file):
-        return _load_npz(cache_file)
+        return _load_hdf5(cache_file)
 
     # Otherwise, actually call crossmatcher
 
@@ -143,7 +136,7 @@ def doit_by_key(table, key_values, columns, **kwargs):
     result = crossmatcher.doit_by_key(table, key_values, columns, **kwargs)
 
     # Save to cache
-    _save_npz(cache_file, result, as_dict)
+    _save_hdf5(cache_file, result, as_dict)
 
     return result
 
@@ -173,17 +166,17 @@ def doit(table, ra_values, dec_values, columns, **kwargs):
     # Build a unique hash for this call
     call_hash = _hash_call("doit", table, ra_values, dec_values, columns,
                            **kwargs)
-    cache_file = os.path.join(CACHE_DIR, f"{call_hash}.npz")
+    cache_file = os.path.join(CACHE_DIR, f"{call_hash}.hdf5")
 
     # If it exists, load from cache
     if os.path.isfile(cache_file):
-        return _load_npz(cache_file)
+        return _load_hdf5(cache_file)
 
     # Otherwise, call crossmatcher
     import crossmatcher
     result = crossmatcher.doit(table, ra_values, dec_values, columns, **kwargs)
 
     # Save to cache
-    _save_npz(cache_file, result, as_dict)
+    _save_hdf5(cache_file, result, as_dict)
 
     return result

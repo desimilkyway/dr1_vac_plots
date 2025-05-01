@@ -3,7 +3,7 @@
 import os
 import hashlib
 import numpy as np
-from config import caxsche_dir
+from config import cache_dir
 
 CACHE_DIR = cache_dir
 

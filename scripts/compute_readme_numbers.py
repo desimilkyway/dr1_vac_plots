@@ -11,7 +11,9 @@ TG = atpy.Table().read(fname, 'GAIA')
 print(len(T))
 #    The total number of fitted coadded spectra included in the release: 6,372,607
 qq = T[T['RR_SPECTYPE'] == 'STAR']
-print(len(np.unique(qq['TARGETID'])))
+# print(len(np.unique(qq['TARGETID'])))
+print(len(qq))
+print(qq['PRIMARY'].sum())
 #    The number of unique DESI sources, classified as stars by Redrock: 4,586,247
 
 print(len(np.unique(TG['SOURCE_ID'])))

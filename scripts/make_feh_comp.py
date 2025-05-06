@@ -389,6 +389,8 @@ for var_name in ['FEH', 'FEH_CALIB2']:
                 bins=bins,
                 label=label,
             )
+            if cnt in [1, 3]:
+                plt.ylabel('stars/bin')
             plt.annotate(r'$%.2f_{%.2f}^{+%.2f}$' %
                          (percs[1], percs[0] - percs[1], percs[2] - percs[1]),
                          (.8, .8 - .3 * i),

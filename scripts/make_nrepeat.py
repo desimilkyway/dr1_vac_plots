@@ -59,7 +59,7 @@ for i in range(len(limits) - 1):
              alpha=0.5,
              color=['blue', 'green', 'red', 'orange'][i])
 plt.xlabel('N observations')
-plt.ylabel('N stars')
+plt.ylabel('N objects')
 plt.legend()
 plt.xlim(0, 50)
 plt.gca().set_yscale('log')

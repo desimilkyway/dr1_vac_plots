@@ -46,6 +46,7 @@ for t in np.unique(tileid):
     res[t] = np.nanmedian((TT['VRAD'] - GT['RADIAL_VELOCITY'])[xind])
     corr[xind] = res[t] + np.zeros(xind.sum())
     # TT['VRAD'][xind] - res[t]
+print(np.percentile(corr, [1, 16, 50, 84, 99]))
 atpy.Table({
     'TARGETID': TT['TARGETID'],
     'VRAD_BIAS': corr,

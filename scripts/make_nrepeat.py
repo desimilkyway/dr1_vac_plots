@@ -46,8 +46,8 @@ limits = [0, 1, 10, 100, 1000]
 for i in range(len(limits) - 1):
     limit1, limit2 = limits[i], limits[i + 1]
     if limit1 == 0:
-        lab = r'$\phantom{1d \leq} \delta t <%d$ d' % (limit2)
-    if limit1 == 100:
+        lab = r'$0 d < \delta t <%d$ d' % (limit2)
+    elif limit1 == 100:
         lab = r'$%d$ d$ \leq  \delta t$ ' % (limit1)
     else:
         lab = r'$%d$ d$ \leq \delta t <%d$ d' % (limit1, limit2)
@@ -59,6 +59,7 @@ for i in range(len(limits) - 1):
              alpha=0.5,
              color=['blue', 'green', 'red', 'orange'][i])
 plt.xlabel('N observations')
+plt.ylabel('N stars')
 plt.legend()
 plt.xlim(0, 50)
 plt.gca().set_yscale('log')

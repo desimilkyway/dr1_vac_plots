@@ -1,9 +1,17 @@
+This is the repository of codes used to make all the figures/tables in the Koposov+2025 paper 
+on DESI DR1 stellar catalogue.
+
+
 The scripts used to make figures are in scripts folder
 
 The code also relies on cached results of some queries stored in
 query_cache/
+Available here: https://doi.org/10.5281/zenodo.15317970
+
 and external datasets stored in
 external/
+Available here: https://doi.org/10.5281/zenodo.15317970
+
 You also need to have DESI VAC tables.
 
 You may need to change the paths in scripts/config.py to point at

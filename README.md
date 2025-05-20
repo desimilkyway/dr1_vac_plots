@@ -20,17 +20,11 @@ the DESI data.
 You will need the
 mwsall-pix-iron.fits fits file
 from https://data.desi.lbl.gov/public/dr1/vac/dr1/mws/iron/v1.0/
-And the files for single epoch measurements:
-rvpix_exp-sv1-bright.fits
-rvpix_exp-cmx-other.fits       rvpix_exp-sv1-dark.fits
-rvpix_exp-main-backup.fits     rvpix_exp-sv1-other.fits
-rvpix_exp-main-bright.fits     rvpix_exp-sv2-backup.fits
-rvpix_exp-main-dark.fits       rvpix_exp-sv2-bright.fits
-rvpix_exp-special-backup.fits  rvpix_exp-sv2-dark.fits
-rvpix_exp-special-bright.fits  rvpix_exp-sv3-backup.fits
-rvpix_exp-special-dark.fits    rvpix_exp-sv3-bright.fits
-rvpix_exp-special-other.fits   rvpix_exp-sv3-dark.fits
-rvpix_exp-sv1-backup.fits
+And all the files for single epoch measurements:
+rvpix_exp-sv1-bright.fits, rvpix_exp-cmx-other.fits,    rvpix_exp-sv1-dark.fits, rvpix_exp-main-backup.fits,  rvpix_exp-sv1-other.fits, 
+rvpix_exp-main-bright.fits, rvpix_exp-sv2-backup.fits,  rvpix_exp-main-dark.fits,   rvpix_exp-sv2-bright.fits, 
+rvpix_exp-special-backup.fits, rvpix_exp-sv2-dark.fits,  rvpix_exp-special-bright.fits,  rvpix_exp-sv3-backup.fits, 
+rvpix_exp-special-dark.fits,  rvpix_exp-sv3-bright.fits,  rvpix_exp-special-other.fits,   rvpix_exp-sv3-dark.fits, rvpix_exp-sv1-backup.fits
 
 
 Required python modules :
